@@ -1,0 +1,24 @@
+{
+  "name": "crg-demo-crm",
+  "version": "1.0.0",
+  "description": "Demo CRM application for CRG (Conversational Product Intelligence) - includes React frontend and Hono API backend",
+  "private": true,
+  "workspaces": [
+    "crm",
+    "crm-api"
+  ],
+  "scripts": {
+    "dev": "concurrently -n \"api,web\" -c \"yellow,cyan\" \"npm run dev -w crm-api\" \"npm run dev -w crm\"",
+    "build": "npm run build -w crm-api && npm run build -w crm",
+    "build:api": "npm run build -w crm-api",
+    "build:web": "npm run build -w crm",
+    "lint": "npm run lint -w crm",
+    "preview": "npm run preview -w crm"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

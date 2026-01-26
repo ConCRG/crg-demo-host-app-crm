@@ -1,0 +1,126 @@
+{
+  "profile": {
+    "id": "user-001",
+    "name": "Udara Wijesinghe",
+    "email": "udara@example.com",
+    "avatar": null,
+    "timezone": "Europe/London",
+    "role": "admin"
+  },
+  "pipelineStages": [
+    {
+      "id": "stage-1",
+      "name": "Lead",
+      "probability": 10,
+      "color": "#6B7280",
+      "order": 1
+    },
+    {
+      "id": "stage-2",
+      "name": "Qualified",
+      "probability": 25,
+      "color": "#3B82F6",
+      "order": 2
+    },
+    {
+      "id": "stage-3",
+      "name": "Proposal",
+      "probability": 50,
+      "color": "#8B5CF6",
+      "order": 3
+    },
+    {
+      "id": "stage-4",
+      "name": "Negotiation",
+      "probability": 75,
+      "color": "#F59E0B",
+      "order": 4
+    },
+    {
+      "id": "stage-5",
+      "name": "Closed Won",
+      "probability": 100,
+      "color": "#10B981",
+      "order": 5
+    },
+    {
+      "id": "stage-6",
+      "name": "Closed Lost",
+      "probability": 0,
+      "color": "#EF4444",
+      "order": 6
+    }
+  ],
+  "customFields": [
+    {
+      "id": "cf-1",
+      "name": "Lead Source",
+      "type": "dropdown",
+      "entity": "contact",
+      "required": false,
+      "options": ["Website", "Referral", "Social Media", "Cold Call", "Trade Show", "Other"]
+    },
+    {
+      "id": "cf-2",
+      "name": "Annual Revenue",
+      "type": "number",
+      "entity": "company",
+      "required": false
+    },
+    {
+      "id": "cf-3",
+      "name": "Contract End Date",
+      "type": "date",
+      "entity": "deal",
+      "required": true
+    },
+    {
+      "id": "cf-4",
+      "name": "Notes",
+      "type": "text",
+      "entity": "contact",
+      "required": false
+    },
+    {
+      "id": "cf-5",
+      "name": "Industry Vertical",
+      "type": "dropdown",
+      "entity": "company",
+      "required": true,
+      "options": ["Technology", "Healthcare", "Finance", "Retail", "Manufacturing", "Other"]
+    }
+  ],
+  "notifications": {
+    "email": {
+      "newDeal": true,
+      "dealStageChange": true,
+      "dealWon": true,
+      "dealLost": false,
+      "newContact": false,
+      "activityReminder": true,
+      "weeklyReport": true
+    },
+    "inApp": {
+      "newDeal": true,
+      "dealStageChange": true,
+      "dealWon": true,
+      "dealLost": true,
+      "newContact": true,
+      "activityReminder": true,
+      "mentionNotification": true
+    }
+  },
+  "timezones": [
+    { "value": "America/New_York", "label": "Eastern Time (US)" },
+    { "value": "America/Chicago", "label": "Central Time (US)" },
+    { "value": "America/Denver", "label": "Mountain Time (US)" },
+    { "value": "America/Los_Angeles", "label": "Pacific Time (US)" },
+    { "value": "Europe/London", "label": "London (UK)" },
+    { "value": "Europe/Paris", "label": "Central European Time" },
+    { "value": "Asia/Dubai", "label": "Dubai (UAE)" },
+    { "value": "Asia/Kolkata", "label": "India Standard Time" },
+    { "value": "Asia/Singapore", "label": "Singapore Time" },
+    { "value": "Asia/Tokyo", "label": "Japan Standard Time" },
+    { "value": "Australia/Sydney", "label": "Sydney (Australia)" }
+  ]
+}

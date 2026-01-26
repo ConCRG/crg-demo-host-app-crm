@@ -1,0 +1,12 @@
+name = "crm-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[dev]
+port = 8787
+
+# Uncomment when ready to use D1 database
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "crm-db"
+# database_id = "placeholder-id"

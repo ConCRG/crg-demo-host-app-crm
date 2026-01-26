@@ -1,0 +1,437 @@
+[
+  {
+    "id": "deal-001",
+    "name": "Enterprise CRM Implementation",
+    "companyId": "comp-001",
+    "companyName": "Acme Corporation",
+    "contactId": "cont-001",
+    "contactName": "John Smith",
+    "value": 125000,
+    "stage": "negotiation",
+    "probability": 75,
+    "expectedCloseDate": "2026-02-15",
+    "createdAt": "2025-11-10",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-11-10" },
+      { "stage": "qualified", "date": "2025-11-18" },
+      { "stage": "proposal", "date": "2025-12-05" },
+      { "stage": "negotiation", "date": "2026-01-08" }
+    ]
+  },
+  {
+    "id": "deal-002",
+    "name": "Cloud Migration Project",
+    "companyId": "comp-002",
+    "companyName": "TechStart Inc",
+    "contactId": "cont-002",
+    "contactName": "Sarah Johnson",
+    "value": 85000,
+    "stage": "proposal",
+    "probability": 50,
+    "expectedCloseDate": "2026-03-01",
+    "createdAt": "2025-12-01",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-12-01" },
+      { "stage": "qualified", "date": "2025-12-15" },
+      { "stage": "proposal", "date": "2026-01-05" }
+    ]
+  },
+  {
+    "id": "deal-003",
+    "name": "Annual Support Contract",
+    "companyId": "comp-003",
+    "companyName": "Global Industries",
+    "contactId": "cont-003",
+    "contactName": "Michael Chen",
+    "value": 45000,
+    "stage": "closed-won",
+    "probability": 100,
+    "expectedCloseDate": "2026-01-10",
+    "createdAt": "2025-10-20",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-10-20" },
+      { "stage": "qualified", "date": "2025-11-01" },
+      { "stage": "proposal", "date": "2025-11-15" },
+      { "stage": "negotiation", "date": "2025-12-10" },
+      { "stage": "closed-won", "date": "2026-01-10" }
+    ]
+  },
+  {
+    "id": "deal-004",
+    "name": "Marketing Automation Suite",
+    "companyId": "comp-004",
+    "companyName": "Creative Solutions Ltd",
+    "contactId": "cont-004",
+    "contactName": "Emily Davis",
+    "value": 67500,
+    "stage": "qualified",
+    "probability": 30,
+    "expectedCloseDate": "2026-04-15",
+    "createdAt": "2026-01-05",
+    "stageHistory": [
+      { "stage": "lead", "date": "2026-01-05" },
+      { "stage": "qualified", "date": "2026-01-20" }
+    ]
+  },
+  {
+    "id": "deal-005",
+    "name": "Data Analytics Platform",
+    "companyId": "comp-005",
+    "companyName": "DataDriven Co",
+    "contactId": "cont-005",
+    "contactName": "Robert Wilson",
+    "value": 150000,
+    "stage": "lead",
+    "probability": 10,
+    "expectedCloseDate": "2026-06-01",
+    "createdAt": "2026-01-15",
+    "stageHistory": [
+      { "stage": "lead", "date": "2026-01-15" }
+    ]
+  },
+  {
+    "id": "deal-006",
+    "name": "Security Audit Services",
+    "companyId": "comp-006",
+    "companyName": "SecureNet Systems",
+    "contactId": "cont-006",
+    "contactName": "Amanda Martinez",
+    "value": 32000,
+    "stage": "closed-lost",
+    "probability": 0,
+    "expectedCloseDate": "2026-01-05",
+    "createdAt": "2025-09-15",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-09-15" },
+      { "stage": "qualified", "date": "2025-10-01" },
+      { "stage": "proposal", "date": "2025-11-10" },
+      { "stage": "closed-lost", "date": "2026-01-05" }
+    ]
+  },
+  {
+    "id": "deal-007",
+    "name": "HR Management System",
+    "companyId": "comp-007",
+    "companyName": "PeopleFirst HR",
+    "contactId": "cont-007",
+    "contactName": "David Brown",
+    "value": 95000,
+    "stage": "negotiation",
+    "probability": 80,
+    "expectedCloseDate": "2026-02-28",
+    "createdAt": "2025-10-05",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-10-05" },
+      { "stage": "qualified", "date": "2025-10-25" },
+      { "stage": "proposal", "date": "2025-11-20" },
+      { "stage": "negotiation", "date": "2026-01-02" }
+    ]
+  },
+  {
+    "id": "deal-008",
+    "name": "E-commerce Platform Upgrade",
+    "companyId": "comp-008",
+    "companyName": "ShopSmart Online",
+    "contactId": "cont-008",
+    "contactName": "Lisa Anderson",
+    "value": 78000,
+    "stage": "proposal",
+    "probability": 45,
+    "expectedCloseDate": "2026-03-15",
+    "createdAt": "2025-12-10",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-12-10" },
+      { "stage": "qualified", "date": "2025-12-28" },
+      { "stage": "proposal", "date": "2026-01-12" }
+    ]
+  },
+  {
+    "id": "deal-009",
+    "name": "Mobile App Development",
+    "companyId": "comp-009",
+    "companyName": "AppVenture Labs",
+    "contactId": "cont-009",
+    "contactName": "James Taylor",
+    "value": 120000,
+    "stage": "qualified",
+    "probability": 35,
+    "expectedCloseDate": "2026-05-01",
+    "createdAt": "2026-01-08",
+    "stageHistory": [
+      { "stage": "lead", "date": "2026-01-08" },
+      { "stage": "qualified", "date": "2026-01-22" }
+    ]
+  },
+  {
+    "id": "deal-010",
+    "name": "Business Intelligence Dashboard",
+    "companyId": "comp-010",
+    "companyName": "Insight Analytics",
+    "contactId": "cont-010",
+    "contactName": "Patricia White",
+    "value": 55000,
+    "stage": "lead",
+    "probability": 15,
+    "expectedCloseDate": "2026-05-15",
+    "createdAt": "2026-01-18",
+    "stageHistory": [
+      { "stage": "lead", "date": "2026-01-18" }
+    ]
+  },
+  {
+    "id": "deal-011",
+    "name": "Customer Portal Redesign",
+    "companyId": "comp-011",
+    "companyName": "ServiceFirst Inc",
+    "contactId": "cont-011",
+    "contactName": "Christopher Lee",
+    "value": 42000,
+    "stage": "closed-won",
+    "probability": 100,
+    "expectedCloseDate": "2025-12-20",
+    "createdAt": "2025-08-15",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-08-15" },
+      { "stage": "qualified", "date": "2025-09-01" },
+      { "stage": "proposal", "date": "2025-10-05" },
+      { "stage": "negotiation", "date": "2025-11-15" },
+      { "stage": "closed-won", "date": "2025-12-20" }
+    ]
+  },
+  {
+    "id": "deal-012",
+    "name": "Inventory Management System",
+    "companyId": "comp-012",
+    "companyName": "WarehousePro",
+    "contactId": "cont-012",
+    "contactName": "Jennifer Garcia",
+    "value": 88000,
+    "stage": "proposal",
+    "probability": 55,
+    "expectedCloseDate": "2026-03-30",
+    "createdAt": "2025-11-25",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-11-25" },
+      { "stage": "qualified", "date": "2025-12-10" },
+      { "stage": "proposal", "date": "2026-01-15" }
+    ]
+  },
+  {
+    "id": "deal-013",
+    "name": "Training Portal Development",
+    "companyId": "comp-013",
+    "companyName": "LearnTech Solutions",
+    "contactId": "cont-013",
+    "contactName": "Daniel Robinson",
+    "value": 36000,
+    "stage": "negotiation",
+    "probability": 70,
+    "expectedCloseDate": "2026-02-10",
+    "createdAt": "2025-10-30",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-10-30" },
+      { "stage": "qualified", "date": "2025-11-15" },
+      { "stage": "proposal", "date": "2025-12-08" },
+      { "stage": "negotiation", "date": "2026-01-05" }
+    ]
+  },
+  {
+    "id": "deal-014",
+    "name": "API Integration Services",
+    "companyId": "comp-014",
+    "companyName": "ConnectAll Tech",
+    "contactId": "cont-014",
+    "contactName": "Michelle Thompson",
+    "value": 28000,
+    "stage": "closed-lost",
+    "probability": 0,
+    "expectedCloseDate": "2025-12-15",
+    "createdAt": "2025-09-01",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-09-01" },
+      { "stage": "qualified", "date": "2025-09-20" },
+      { "stage": "closed-lost", "date": "2025-12-15" }
+    ]
+  },
+  {
+    "id": "deal-015",
+    "name": "DevOps Consulting Package",
+    "companyId": "comp-015",
+    "companyName": "CloudNative Corp",
+    "contactId": "cont-015",
+    "contactName": "Kevin Harris",
+    "value": 72000,
+    "stage": "lead",
+    "probability": 20,
+    "expectedCloseDate": "2026-06-15",
+    "createdAt": "2026-01-20",
+    "stageHistory": [
+      { "stage": "lead", "date": "2026-01-20" }
+    ]
+  },
+  {
+    "id": "deal-016",
+    "name": "Financial Reporting Tool",
+    "companyId": "comp-016",
+    "companyName": "FinanceFlow LLC",
+    "contactId": "cont-016",
+    "contactName": "Nancy Clark",
+    "value": 105000,
+    "stage": "qualified",
+    "probability": 40,
+    "expectedCloseDate": "2026-04-30",
+    "createdAt": "2025-12-20",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-12-20" },
+      { "stage": "qualified", "date": "2026-01-10" }
+    ]
+  },
+  {
+    "id": "deal-017",
+    "name": "Compliance Management Suite",
+    "companyId": "comp-017",
+    "companyName": "RegulatoryPro",
+    "contactId": "cont-017",
+    "contactName": "Steven Lewis",
+    "value": 135000,
+    "stage": "proposal",
+    "probability": 60,
+    "expectedCloseDate": "2026-03-20",
+    "createdAt": "2025-11-05",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-11-05" },
+      { "stage": "qualified", "date": "2025-11-22" },
+      { "stage": "proposal", "date": "2025-12-18" }
+    ]
+  },
+  {
+    "id": "deal-018",
+    "name": "Real-time Chat Integration",
+    "companyId": "comp-018",
+    "companyName": "MessageHub Inc",
+    "contactId": "cont-018",
+    "contactName": "Sandra Walker",
+    "value": 25000,
+    "stage": "closed-won",
+    "probability": 100,
+    "expectedCloseDate": "2026-01-15",
+    "createdAt": "2025-11-01",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-11-01" },
+      { "stage": "qualified", "date": "2025-11-18" },
+      { "stage": "proposal", "date": "2025-12-05" },
+      { "stage": "negotiation", "date": "2025-12-28" },
+      { "stage": "closed-won", "date": "2026-01-15" }
+    ]
+  },
+  {
+    "id": "deal-019",
+    "name": "Document Management System",
+    "companyId": "comp-019",
+    "companyName": "DocuFlow Systems",
+    "contactId": "cont-019",
+    "contactName": "George Hall",
+    "value": 58000,
+    "stage": "negotiation",
+    "probability": 65,
+    "expectedCloseDate": "2026-02-20",
+    "createdAt": "2025-10-15",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-10-15" },
+      { "stage": "qualified", "date": "2025-11-02" },
+      { "stage": "proposal", "date": "2025-11-28" },
+      { "stage": "negotiation", "date": "2026-01-10" }
+    ]
+  },
+  {
+    "id": "deal-020",
+    "name": "Automated Testing Framework",
+    "companyId": "comp-020",
+    "companyName": "QualityFirst Labs",
+    "contactId": "cont-020",
+    "contactName": "Karen Allen",
+    "value": 48000,
+    "stage": "lead",
+    "probability": 15,
+    "expectedCloseDate": "2026-07-01",
+    "createdAt": "2026-01-22",
+    "stageHistory": [
+      { "stage": "lead", "date": "2026-01-22" }
+    ]
+  },
+  {
+    "id": "deal-021",
+    "name": "Supply Chain Optimization",
+    "companyId": "comp-021",
+    "companyName": "LogisticsPro",
+    "contactId": "cont-021",
+    "contactName": "Richard Young",
+    "value": 175000,
+    "stage": "qualified",
+    "probability": 25,
+    "expectedCloseDate": "2026-05-30",
+    "createdAt": "2026-01-02",
+    "stageHistory": [
+      { "stage": "lead", "date": "2026-01-02" },
+      { "stage": "qualified", "date": "2026-01-18" }
+    ]
+  },
+  {
+    "id": "deal-022",
+    "name": "Payroll System Integration",
+    "companyId": "comp-022",
+    "companyName": "PayrollPlus",
+    "contactId": "cont-022",
+    "contactName": "Betty King",
+    "value": 62000,
+    "stage": "closed-won",
+    "probability": 100,
+    "expectedCloseDate": "2026-01-20",
+    "createdAt": "2025-09-25",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-09-25" },
+      { "stage": "qualified", "date": "2025-10-12" },
+      { "stage": "proposal", "date": "2025-11-05" },
+      { "stage": "negotiation", "date": "2025-12-15" },
+      { "stage": "closed-won", "date": "2026-01-20" }
+    ]
+  },
+  {
+    "id": "deal-023",
+    "name": "Customer Feedback Platform",
+    "companyId": "comp-023",
+    "companyName": "VoiceOfCustomer",
+    "contactId": "cont-023",
+    "contactName": "Edward Wright",
+    "value": 39000,
+    "stage": "proposal",
+    "probability": 50,
+    "expectedCloseDate": "2026-04-01",
+    "createdAt": "2025-12-05",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-12-05" },
+      { "stage": "qualified", "date": "2025-12-22" },
+      { "stage": "proposal", "date": "2026-01-18" }
+    ]
+  },
+  {
+    "id": "deal-024",
+    "name": "Workflow Automation Tool",
+    "companyId": "comp-024",
+    "companyName": "AutomateNow",
+    "contactId": "cont-024",
+    "contactName": "Dorothy Scott",
+    "value": 82000,
+    "stage": "closed-lost",
+    "probability": 0,
+    "expectedCloseDate": "2025-12-30",
+    "createdAt": "2025-08-20",
+    "stageHistory": [
+      { "stage": "lead", "date": "2025-08-20" },
+      { "stage": "qualified", "date": "2025-09-08" },
+      { "stage": "proposal", "date": "2025-10-15" },
+      { "stage": "negotiation", "date": "2025-11-20" },
+      { "stage": "closed-lost", "date": "2025-12-30" }
+    ]
+  }
+]
