@@ -30,6 +30,9 @@ This will start:
 | `npm run build` | Build both frontend and API for production |
 | `npm run build:web` | Build frontend only |
 | `npm run build:api` | Build API only |
+| `npm test` | Run all tests (backend + frontend) |
+| `npm run test:api` | Run backend tests only |
+| `npm run test:web` | Run frontend tests only |
 | `npm run lint` | Run linter on frontend |
 | `npm run preview` | Preview production build locally |
 
@@ -77,6 +80,28 @@ apps/
 - Hono (lightweight, edge-ready framework)
 - Cloudflare Workers compatible
 - In-memory data store (for demo purposes)
+
+## Testing
+
+Tests use [Vitest](https://vitest.dev/) and run entirely in Node.js (no browser required).
+
+```bash
+# Run all tests
+npm test
+
+# Run backend tests only
+npm run test:api
+
+# Run frontend tests only
+npm run test:web
+
+# Watch mode (per workspace)
+npm run test:watch -w crm-api
+npm run test:watch -w crm
+```
+
+**Backend tests** (115 tests) cover all API routes via Hono's `app.request()` and store unit tests.
+**Frontend tests** (10 tests) cover the API client with mocked `fetch`.
 
 ## Development Notes
 
