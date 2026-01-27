@@ -12,6 +12,9 @@
     "build": "npm run build -w crm-api && npm run build -w crm",
     "build:api": "npm run build -w crm-api",
     "build:web": "npm run build -w crm",
+    "test": "npm run test -w crm-api && npm run test -w crm",
+    "test:api": "npm run test -w crm-api",
+    "test:web": "npm run test -w crm",
     "lint": "npm run lint -w crm",
     "preview": "npm run preview -w crm"
   },
