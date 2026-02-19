@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:assist": "vite --port 5174 --mode production",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -18,7 +19,10 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.0",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "@crg/connector-react": "file:../../crg-platform/crg-train/packages/connector-react",
+    "@crg/connector-core": "file:../../crg-platform/crg-train/packages/connector-core",
+    "@crg/sidecar-ui": "file:../../crg-platform/crg-train/packages/sidecar-ui"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

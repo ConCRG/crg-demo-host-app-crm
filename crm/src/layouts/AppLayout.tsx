@@ -19,6 +19,9 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
+const crgMode = import.meta.env.VITE_CRG_MODE ?? 'train';
+const appTitle = crgMode === 'assist' ? 'CRM Demo' : 'CRM Dev';
+
 export default function AppLayout() {
   return (
     <div className="flex h-screen bg-gray-100">
@@ -26,7 +29,7 @@ export default function AppLayout() {
       <aside className="w-64 bg-slate-900 text-white flex flex-col">
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-slate-700">
-          <span className="text-xl font-bold">CRM Demo</span>
+          <span className="text-xl font-bold">{appTitle}</span>
         </div>
 
         {/* Navigation */}
