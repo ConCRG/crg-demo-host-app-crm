@@ -11,7 +11,17 @@ const crgMode = (import.meta.env.VITE_CRG_MODE ?? 'train') as 'train' | 'assist'
 const config = {
   appId: 'crm-demo',
   serviceUrl: import.meta.env.VITE_CRG_SERVICE_URL ?? 'http://localhost:3001',
+  graphServiceUrl: import.meta.env.VITE_CRG_GRAPH_SERVICE_URL ?? 'http://localhost:8002',
   mode: crgMode,
+  backgroundCapture: {
+    enabled: true,
+    debounceMs: 1000,
+    mutationThreshold: 10,
+    includeScreenshots: false,
+    syncStrategy: 'immediate' as const,
+    minRecaptureIntervalMs: 10000, // 10 seconds for easier testing (default is 60s)
+    enableContentHashing: true,
+  },
 };
 
 const mountUI = crgMode === 'assist' ? mountAssistUI : mountSidecarUI;
