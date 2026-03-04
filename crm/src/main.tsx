@@ -13,6 +13,8 @@ const config = {
   serviceUrl: import.meta.env.VITE_CRG_SERVICE_URL ?? 'http://localhost:3001',
   graphServiceUrl: import.meta.env.VITE_CRG_GRAPH_SERVICE_URL ?? 'http://localhost:8002',
   mode: crgMode,
+  userRole: 'admin',
+  userId: 'demo-user-001',
   backgroundCapture: {
     enabled: true,
     debounceMs: 1000,
