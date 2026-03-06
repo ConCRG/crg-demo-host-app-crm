@@ -19,8 +19,7 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
-const crgMode = import.meta.env.VITE_CRG_MODE ?? 'train';
-const appTitle = crgMode === 'assist' ? 'CRM Demo' : 'CRM Dev';
+const appTitle = 'CRM Demo';
 
 export default function AppLayout() {
   return (
