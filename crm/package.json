@@ -24,6 +24,9 @@
     "@crg/connector-core": "file:../crg-platform/packages/connector-core",
     "@crg/sidecar-ui": "file:../crg-platform/packages/sidecar-ui"
   },
+  "optionalDependencies": {
+    "lightningcss-linux-x64-gnu": "1.30.2"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/node": "^24.10.1",
