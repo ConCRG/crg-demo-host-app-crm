@@ -59,10 +59,15 @@ const resolveTsupCli = (cwd) => {
 
 const runTsupBuild = (cwd) => {
   const tsupCli = resolveTsupCli(cwd);
+  const coreMods = path.join(root, "connector-core", "node_modules");
+  const existingNodePath = npmEnv.NODE_PATH || "";
   execSync(`"${process.execPath}" "${tsupCli}"`, {
     cwd,
     stdio: "inherit",
-    env: npmEnv,
+    env: {
+      ...npmEnv,
+      NODE_PATH: existingNodePath ? `${coreMods}:${existingNodePath}` : coreMods,
+    },
   });
 };
 
