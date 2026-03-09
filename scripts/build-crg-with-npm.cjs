@@ -25,21 +25,35 @@ for (const dir of toRemove) {
 }
 const order = ['connector-core', 'connector-react', 'sidecar-ui', 'train-service'];
 
-// Invoke npm via node with PATH set so spawned processes (tsup, etc) find node on Vercel
+// Use node + npm-cli.js for install (avoids PATH); run tsup directly for build (avoids npm script spawn)
 const nodeDir = path.dirname(process.execPath);
 const npmCli = path.join(nodeDir, "..", "lib", "node_modules", "npm", "bin", "npm-cli.js");
 const npmEnv = { ...process.env, PATH: `${nodeDir}:${process.env.PATH || ""}` };
 
-const runNpm = (args, cwd) => {
-  execSync(
-    `"${process.execPath}" "${npmCli}" ${args.join(" ")}`,
-    { cwd, stdio: "inherit", env: npmEnv, shell: true }
-  );
+const runNpmInstall = (cwd) => {
+  execSync(`"${process.execPath}" "${npmCli}" install`, {
+    cwd,
+    stdio: "inherit",
+    env: npmEnv,
+    shell: true,
+  });
+};
+
+const runTsupBuild = (cwd) => {
+  const tsupCli = path.join(cwd, "node_modules", "tsup", "dist", "cli-default.js");
+  if (!fs.existsSync(tsupCli)) {
+    throw new Error(`tsup not found at ${tsupCli} - run npm install first`);
+  }
+  execSync(`"${process.execPath}" "${tsupCli}"`, {
+    cwd,
+    stdio: "inherit",
+    env: process.env,
+  });
 };
 
 for (const pkg of order) {
   const cwd = path.join(root, pkg);
   console.log(`Building ${pkg}...`);
-  runNpm(['install'], cwd);
-  runNpm(['run', 'build'], cwd);
+  runNpmInstall(cwd);
+  runTsupBuild(cwd);
 }
