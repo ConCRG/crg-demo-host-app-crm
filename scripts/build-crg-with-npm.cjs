@@ -25,12 +25,11 @@ for (const dir of toRemove) {
 }
 const order = ['connector-core', 'connector-react', 'sidecar-ui', 'train-service'];
 const nodeDir = path.dirname(process.execPath);
-const npm = path.join(nodeDir, 'npm');
 const env = { ...process.env, PATH: `${nodeDir}:${process.env.PATH || ''}` };
 
 for (const pkg of order) {
   const cwd = path.join(root, pkg);
   console.log(`Building ${pkg}...`);
-  execSync(`"${npm}" install`, { cwd, stdio: 'inherit', env });
-  execSync(`"${npm}" run build`, { cwd, stdio: 'inherit', env });
+  execSync('npm install', { cwd, stdio: 'inherit', env, shell: '/bin/bash' });
+  execSync('npm run build', { cwd, stdio: 'inherit', env, shell: '/bin/bash' });
 }
