@@ -44,15 +44,25 @@ const runNpmInstall = (cwd) => {
   });
 };
 
-const runTsupBuild = (cwd) => {
-  const tsupCli = path.join(cwd, "node_modules", "tsup", "dist", "cli-default.js");
-  if (!fs.existsSync(tsupCli)) {
-    throw new Error(`tsup not found at ${tsupCli} - run npm install first`);
+// connector-core always installs tsup; other packages deduplicate via file: ref and may not have it locally.
+// Resolve tsup from cwd first, then fall back to connector-core's node_modules (same semver range).
+const resolveTsupCli = (cwd) => {
+  const candidates = [
+    path.join(cwd, "node_modules", "tsup", "dist", "cli-default.js"),
+    path.join(root, "connector-core", "node_modules", "tsup", "dist", "cli-default.js"),
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
   }
+  throw new Error(`tsup not found in any of:\n${candidates.join("\n")}`);
+};
+
+const runTsupBuild = (cwd) => {
+  const tsupCli = resolveTsupCli(cwd);
   execSync(`"${process.execPath}" "${tsupCli}"`, {
     cwd,
     stdio: "inherit",
-    env: process.env,
+    env: npmEnv,
   });
 };
 
