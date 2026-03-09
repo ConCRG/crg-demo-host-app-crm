@@ -28,7 +28,12 @@ const order = ['connector-core', 'connector-react', 'sidecar-ui', 'train-service
 // Use node + npm-cli.js for install (avoids PATH); run tsup directly for build (avoids npm script spawn)
 const nodeDir = path.dirname(process.execPath);
 const npmCli = path.join(nodeDir, "..", "lib", "node_modules", "npm", "bin", "npm-cli.js");
-const npmEnv = { ...process.env, PATH: `${nodeDir}:${process.env.PATH || ""}` };
+// Ensure devDependencies (tsup) are installed - Vercel sets NODE_ENV=production
+const npmEnv = {
+  ...process.env,
+  PATH: `${nodeDir}:${process.env.PATH || ""}`,
+  NODE_ENV: "development",
+};
 
 const runNpmInstall = (cwd) => {
   execSync(`"${process.execPath}" "${npmCli}" install`, {
