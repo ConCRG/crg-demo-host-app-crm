@@ -30,7 +30,7 @@ const nodeDir = path.dirname(process.execPath);
 const npmCli = path.join(nodeDir, '..', 'lib', 'node_modules', 'npm', 'bin', 'npm-cli.js');
 const runNpm = (args, cwd) => {
   if (fs.existsSync(npmCli)) {
-    execFileSync('node', [npmCli, ...args], { cwd, stdio: 'inherit', env: process.env });
+    execFileSync(process.execPath, [npmCli, ...args], { cwd, stdio: 'inherit', env: process.env });
   } else {
     const env = { ...process.env, PATH: `${nodeDir}:${process.env.PATH || ''}` };
     execSync(`npm ${args.join(' ')}`, { cwd, stdio: 'inherit', env, shell: '/bin/bash' });
