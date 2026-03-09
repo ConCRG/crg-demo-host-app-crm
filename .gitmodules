@@ -1,0 +1,3 @@
+[submodule "crg-platform"]
+	path = crg-platform
+	url = git@github-personal:nooscraft/crg-platform.git
