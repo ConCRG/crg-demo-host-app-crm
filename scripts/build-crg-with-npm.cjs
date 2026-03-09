@@ -36,7 +36,7 @@ const npmEnv = {
 };
 
 const runNpmInstall = (cwd) => {
-  execSync(`"${process.execPath}" "${npmCli}" install`, {
+  execSync(`"${process.execPath}" "${npmCli}" install --include=dev`, {
     cwd,
     stdio: "inherit",
     env: npmEnv,
