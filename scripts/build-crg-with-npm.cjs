@@ -3,7 +3,7 @@
  * Run patch:crg first so connector-react and sidecar-ui use file: deps.
  */
 const fs = require('fs');
-const { execSync, execFileSync } = require('child_process');
+const { execSync } = require("child_process");
 const path = require('path');
 
 const crgRoot = path.join(__dirname, '..', 'crg-platform');
@@ -25,16 +25,16 @@ for (const dir of toRemove) {
 }
 const order = ['connector-core', 'connector-react', 'sidecar-ui', 'train-service'];
 
-// Invoke npm via node to avoid PATH issues on Vercel (status 127)
+// Invoke npm via node with PATH set so spawned processes (tsup, etc) find node on Vercel
 const nodeDir = path.dirname(process.execPath);
-const npmCli = path.join(nodeDir, '..', 'lib', 'node_modules', 'npm', 'bin', 'npm-cli.js');
+const npmCli = path.join(nodeDir, "..", "lib", "node_modules", "npm", "bin", "npm-cli.js");
+const npmEnv = { ...process.env, PATH: `${nodeDir}:${process.env.PATH || ""}` };
+
 const runNpm = (args, cwd) => {
-  if (fs.existsSync(npmCli)) {
-    execFileSync(process.execPath, [npmCli, ...args], { cwd, stdio: 'inherit', env: process.env });
-  } else {
-    const env = { ...process.env, PATH: `${nodeDir}:${process.env.PATH || ''}` };
-    execSync(`npm ${args.join(' ')}`, { cwd, stdio: 'inherit', env, shell: '/bin/bash' });
-  }
+  execSync(
+    `"${process.execPath}" "${npmCli}" ${args.join(" ")}`,
+    { cwd, stdio: "inherit", env: npmEnv, shell: true }
+  );
 };
 
 for (const pkg of order) {
