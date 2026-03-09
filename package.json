@@ -14,7 +14,7 @@
     "build:web": "npm run build -w crm",
     "build:crg": "corepack enable pnpm && cd crg-platform && pnpm install && pnpm run build && cd ..",
     "patch:crg": "node scripts/patch-crg-workspace-deps.cjs",
-    "vercel:install": "git submodule update --init --recursive && npm run build:crg && npm run patch:crg && npm install",
+    "vercel:install": "node scripts/configure-submodule-auth.cjs && git submodule update --init --recursive && npm run build:crg && npm run patch:crg && npm install",
     "test": "npm run test -w crm-api && npm run test -w crm",
     "test:api": "npm run test -w crm-api",
     "test:web": "npm run test -w crm",
