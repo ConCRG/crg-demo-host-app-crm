@@ -1,9 +1,22 @@
 import { useState, useEffect } from 'react';
 import type { Company } from '../types';
-import Modal from './Modal';
-import Input from './Input';
-import Select from './Select';
-import Button from './Button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface CompanyModalProps {
   isOpen: boolean;
@@ -22,45 +35,17 @@ export interface CompanyFormData {
   parentId: string | null;
 }
 
-const industryOptions = [
-  { value: '', label: 'Select Industry' },
-  { value: 'Technology', label: 'Technology' },
-  { value: 'Finance', label: 'Finance' },
-  { value: 'Healthcare', label: 'Healthcare' },
-  { value: 'Manufacturing', label: 'Manufacturing' },
-  { value: 'Retail', label: 'Retail' },
-  { value: 'Education', label: 'Education' },
-  { value: 'Energy', label: 'Energy' },
-  { value: 'Logistics', label: 'Logistics' },
-  { value: 'Media', label: 'Media' },
+const industries = [
+  'Technology', 'Finance', 'Healthcare', 'Manufacturing',
+  'Retail', 'Education', 'Energy', 'Logistics', 'Media',
 ];
 
-const sizeOptions = [
-  { value: '', label: 'Select Size' },
-  { value: '10-50', label: '10-50 employees' },
-  { value: '50-100', label: '50-100 employees' },
-  { value: '100-500', label: '100-500 employees' },
-  { value: '500+', label: '500+ employees' },
-];
-
-export default function CompanyModal({
-  isOpen,
-  onClose,
-  onSave,
-  company,
-  companies,
-}: CompanyModalProps) {
+export default function CompanyModal({ isOpen, onClose, onSave, company, companies }: CompanyModalProps) {
   const [formData, setFormData] = useState<CompanyFormData>({
-    name: '',
-    industry: '',
-    size: undefined,
-    website: '',
-    address: '',
-    parentId: null,
+    name: '', industry: '', size: undefined, website: '', address: '', parentId: null,
   });
   const [errors, setErrors] = useState<{ name?: string }>({});
 
-  // Reset form when modal opens/closes or company changes
   useEffect(() => {
     if (isOpen) {
       if (company) {
@@ -73,14 +58,7 @@ export default function CompanyModal({
           parentId: company.parentId || null,
         });
       } else {
-        setFormData({
-          name: '',
-          industry: '',
-          size: undefined,
-          website: '',
-          address: '',
-          parentId: null,
-        });
+        setFormData({ name: '', industry: '', size: undefined, website: '', address: '', parentId: null });
       }
       setErrors({});
     }
@@ -88,106 +66,92 @@ export default function CompanyModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validation
     const newErrors: { name?: string } = {};
-    if (!formData.name.trim()) {
-      newErrors.name = 'Company name is required';
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
+    if (!formData.name.trim()) newErrors.name = 'Company name is required';
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     onSave(formData);
   };
 
-  // Filter out the current company from parent options (can't be its own parent)
-  const parentOptions = [
-    { value: '', label: 'None (Top-level company)' },
-    ...companies
-      .filter((c) => c.id !== company?.id)
-      .map((c) => ({ value: c.id, label: c.name })),
-  ];
+  const parentOptions = companies.filter((c) => c.id !== company?.id);
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={company ? 'Edit Company' : 'Add Company'}
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Company Name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          error={errors.name}
-          placeholder="Enter company name"
-          required
-        />
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{company ? 'Edit Company' : 'Add Company'}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label>Company Name <span className="text-destructive">*</span></Label>
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Enter company name"
+            />
+            {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+          </div>
 
-        <Select
-          label="Industry"
-          options={industryOptions}
-          value={formData.industry}
-          onChange={(e) =>
-            setFormData({ ...formData, industry: e.target.value })
-          }
-        />
+          <div className="space-y-1.5">
+            <Label>Industry</Label>
+            <Select value={formData.industry || 'none'} onValueChange={(v) => setFormData({ ...formData, industry: v === 'none' ? '' : v })}>
+              <SelectTrigger><SelectValue placeholder="Select industry" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No industry</SelectItem>
+                {industries.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <Select
-          label="Company Size"
-          options={sizeOptions}
-          value={formData.size || ''}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              size: (e.target.value as Company['size']) || undefined,
-            })
-          }
-        />
+          <div className="space-y-1.5">
+            <Label>Company Size</Label>
+            <Select value={formData.size || 'none'} onValueChange={(v) => setFormData({ ...formData, size: v === 'none' ? undefined : v as Company['size'] })}>
+              <SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Unknown</SelectItem>
+                <SelectItem value="10-50">10–50 employees</SelectItem>
+                <SelectItem value="50-100">50–100 employees</SelectItem>
+                <SelectItem value="100-500">100–500 employees</SelectItem>
+                <SelectItem value="500+">500+ employees</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <Input
-          label="Website"
-          type="url"
-          value={formData.website}
-          onChange={(e) =>
-            setFormData({ ...formData, website: e.target.value })
-          }
-          placeholder="https://example.com"
-        />
+          <div className="space-y-1.5">
+            <Label>Website</Label>
+            <Input
+              type="url"
+              value={formData.website}
+              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+              placeholder="https://example.com"
+            />
+          </div>
 
-        <Input
-          label="Address"
-          value={formData.address}
-          onChange={(e) =>
-            setFormData({ ...formData, address: e.target.value })
-          }
-          placeholder="Enter company address"
-        />
+          <div className="space-y-1.5">
+            <Label>Address</Label>
+            <Input
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              placeholder="Enter company address"
+            />
+          </div>
 
-        <Select
-          label="Parent Company"
-          options={parentOptions}
-          value={formData.parentId || ''}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              parentId: e.target.value || null,
-            })
-          }
-        />
+          <div className="space-y-1.5">
+            <Label>Parent Company</Label>
+            <Select value={formData.parentId || 'none'} onValueChange={(v) => setFormData({ ...formData, parentId: v === 'none' ? null : v })}>
+              <SelectTrigger><SelectValue placeholder="None (top-level)" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None (top-level)</SelectItem>
+                {parentOptions.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="flex justify-end gap-3 pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            {company ? 'Save Changes' : 'Add Company'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+          <DialogFooter className="pt-2">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit">{company ? 'Save Changes' : 'Add Company'}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

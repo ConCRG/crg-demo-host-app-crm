@@ -1,5 +1,22 @@
 import { useState, useEffect } from 'react';
-import { Modal, Button, Input, Select } from './index';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   createActivity,
   updateActivity,
@@ -45,12 +62,7 @@ const initialFormData: FormData = {
   assignedTo: '',
 };
 
-export default function ActivityModal({
-  isOpen,
-  onClose,
-  onSave,
-  activity,
-}: ActivityModalProps) {
+export default function ActivityModal({ isOpen, onClose, onSave, activity }: ActivityModalProps) {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
@@ -61,14 +73,12 @@ export default function ActivityModal({
   }>({ contacts: [], deals: [], companies: [] });
   const [assignees] = useState(() => getAssignees());
 
-  // Load related entities on mount
+  const isEditMode = !!activity;
+
   useEffect(() => {
     getRelatedEntities().then(setRelatedEntities);
   }, []);
 
-  const isEditMode = !!activity;
-
-  // Populate form when editing
   useEffect(() => {
     if (activity) {
       setFormData({
@@ -82,124 +92,65 @@ export default function ActivityModal({
         assignedTo: activity.assignedTo,
       });
     } else {
-      setFormData({
-        ...initialFormData,
-        assignedTo: assignees[0] || '',
-      });
+      setFormData({ ...initialFormData, assignedTo: assignees[0] || '' });
     }
     setErrors({});
   }, [activity, isOpen, assignees]);
 
-  // Handle input changes
   const handleChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user types
-    if (errors[field as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
+    if (errors[field as keyof FormErrors]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  // Handle related type change
   const handleRelatedTypeChange = (relatedType: RelatedType) => {
-    setFormData((prev) => ({
-      ...prev,
-      relatedType,
-      relatedId: '',
-      relatedTo: '',
-    }));
+    setFormData((prev) => ({ ...prev, relatedType, relatedId: '', relatedTo: '' }));
   };
 
-  // Handle related entity change
   const handleRelatedEntityChange = (relatedId: string) => {
-    let relatedTo = '';
     const entities =
       formData.relatedType === 'Contact'
         ? relatedEntities.contacts
         : formData.relatedType === 'Deal'
           ? relatedEntities.deals
           : relatedEntities.companies;
-
     const entity = entities.find((e) => e.id === relatedId);
-    if (entity) {
-      relatedTo = entity.name;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      relatedId,
-      relatedTo,
-    }));
+    setFormData((prev) => ({ ...prev, relatedId, relatedTo: entity?.name || '' }));
   };
 
-  // Validate form
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
-
-    if (!formData.type) {
-      newErrors.type = 'Type is required';
-    }
-
-    if (!formData.subject.trim()) {
-      newErrors.subject = 'Subject is required';
-    }
-
-    if (!formData.dueDate) {
-      newErrors.dueDate = 'Due date is required';
-    }
-
+    if (!formData.type) newErrors.type = 'Type is required';
+    if (!formData.subject.trim()) newErrors.subject = 'Subject is required';
+    if (!formData.dueDate) newErrors.dueDate = 'Due date is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validate()) return;
-
     setSaving(true);
     try {
-      // Determine status based on due date
       const dueDate = new Date(formData.dueDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const status = dueDate < today ? 'Overdue' : 'Pending';
-
       if (isEditMode && activity) {
         await updateActivity(activity.id, {
           ...formData,
           status: activity.status === 'Completed' ? 'Completed' : status,
         });
       } else {
-        await createActivity({
-          ...formData,
-          status,
-        });
+        await createActivity({ ...formData, status });
       }
       onSave();
-    } catch (error) {
-      console.error('Failed to save activity:', error);
+    } catch (err) {
+      console.error('Failed to save activity:', err);
     } finally {
       setSaving(false);
     }
   };
 
-  // Type options
-  const typeOptions = [
-    { value: 'Call', label: 'Call' },
-    { value: 'Email', label: 'Email' },
-    { value: 'Meeting', label: 'Meeting' },
-    { value: 'Task', label: 'Task' },
-  ];
-
-  // Related type options
-  const relatedTypeOptions = [
-    { value: 'Contact', label: 'Contact' },
-    { value: 'Deal', label: 'Deal' },
-    { value: 'Company', label: 'Company' },
-  ];
-
-  // Get related entity options based on selected type
   const getRelatedOptions = () => {
     const entities =
       formData.relatedType === 'Contact'
@@ -207,97 +158,104 @@ export default function ActivityModal({
         : formData.relatedType === 'Deal'
           ? relatedEntities.deals
           : relatedEntities.companies;
-
-    return [
-      { value: '', label: `Select a ${formData.relatedType.toLowerCase()}` },
-      ...entities.map((e) => ({ value: e.id, label: e.name })),
-    ];
+    return entities;
   };
 
-  // Assignee options
-  const assigneeOptions = [
-    { value: '', label: 'Select assignee' },
-    ...assignees.map((a) => ({ value: a, label: a })),
-  ];
-
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={isEditMode ? 'Edit Activity' : 'Add Activity'}
-      className="max-w-xl"
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <Select
-            label="Type"
-            options={typeOptions}
-            value={formData.type}
-            onChange={(e) => handleChange('type', e.target.value)}
-            error={errors.type}
-            required
-          />
-          <Input
-            label="Due Date"
-            type="date"
-            value={formData.dueDate}
-            onChange={(e) => handleChange('dueDate', e.target.value)}
-            error={errors.dueDate}
-            required
-          />
-        </div>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>{isEditMode ? 'Edit Activity' : 'Add Activity'}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Type <span className="text-destructive">*</span></Label>
+              <Select value={formData.type} onValueChange={(v) => handleChange('type', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Call">Call</SelectItem>
+                  <SelectItem value="Email">Email</SelectItem>
+                  <SelectItem value="Meeting">Meeting</SelectItem>
+                  <SelectItem value="Task">Task</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.type && <p className="text-xs text-destructive">{errors.type}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label>Due Date <span className="text-destructive">*</span></Label>
+              <Input
+                type="date"
+                value={formData.dueDate}
+                onChange={(e) => handleChange('dueDate', e.target.value)}
+              />
+              {errors.dueDate && <p className="text-xs text-destructive">{errors.dueDate}</p>}
+            </div>
+          </div>
 
-        <Input
-          label="Subject"
-          value={formData.subject}
-          onChange={(e) => handleChange('subject', e.target.value)}
-          error={errors.subject}
-          placeholder="Enter activity subject"
-          required
-        />
+          <div className="space-y-1.5">
+            <Label>Subject <span className="text-destructive">*</span></Label>
+            <Input
+              value={formData.subject}
+              onChange={(e) => handleChange('subject', e.target.value)}
+              placeholder="Enter activity subject"
+            />
+            {errors.subject && <p className="text-xs text-destructive">{errors.subject}</p>}
+          </div>
 
-        <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">Notes</label>
-          <textarea
-            value={formData.notes}
-            onChange={(e) => handleChange('notes', e.target.value)}
-            placeholder="Add any additional notes..."
-            rows={3}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
+          <div className="space-y-1.5">
+            <Label>Notes</Label>
+            <Textarea
+              value={formData.notes}
+              onChange={(e) => handleChange('notes', e.target.value)}
+              placeholder="Add any additional notes..."
+              rows={3}
+            />
+          </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Select
-            label="Related Type"
-            options={relatedTypeOptions}
-            value={formData.relatedType}
-            onChange={(e) => handleRelatedTypeChange(e.target.value as RelatedType)}
-          />
-          <Select
-            label="Related To"
-            options={getRelatedOptions()}
-            value={formData.relatedId}
-            onChange={(e) => handleRelatedEntityChange(e.target.value)}
-          />
-        </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Related Type</Label>
+              <Select value={formData.relatedType} onValueChange={(v) => handleRelatedTypeChange(v as RelatedType)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Contact">Contact</SelectItem>
+                  <SelectItem value="Deal">Deal</SelectItem>
+                  <SelectItem value="Company">Company</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Related To</Label>
+              <Select value={formData.relatedId || 'none'} onValueChange={(v) => handleRelatedEntityChange(v === 'none' ? '' : v)}>
+                <SelectTrigger><SelectValue placeholder={`Select ${formData.relatedType.toLowerCase()}`} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {getRelatedOptions().map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-        <Select
-          label="Assigned To"
-          options={assigneeOptions}
-          value={formData.assignedTo}
-          onChange={(e) => handleChange('assignedTo', e.target.value)}
-        />
+          <div className="space-y-1.5">
+            <Label>Assigned To</Label>
+            <Select value={formData.assignedTo || 'none'} onValueChange={(v) => handleChange('assignedTo', v === 'none' ? '' : v)}>
+              <SelectTrigger><SelectValue placeholder="Select assignee" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Unassigned</SelectItem>
+                {assignees.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-          <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={saving}>
-            {saving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Add Activity'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+          <DialogFooter className="pt-2">
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Add Activity'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

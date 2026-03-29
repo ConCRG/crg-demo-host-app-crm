@@ -1,32 +1,42 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Building2, ExternalLink, Search, Users, DollarSign } from 'lucide-react';
+import { Building2, ExternalLink, Search, Users, DollarSign, Plus } from 'lucide-react';
 import type { Company } from '../types';
+import { getCompanies, createCompany, updateCompany, getIndustries } from '../api/companies';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import {
-  getCompanies,
-  createCompany,
-  updateCompany,
-  getIndustries,
-} from '../api/companies';
-import Button from '../components/Button';
-import Input from '../components/Input';
-import Select from '../components/Select';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import CompanyModal, { type CompanyFormData } from '../components/CompanyModal';
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
 
 export default function Companies() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [industryFilter, setIndustryFilter] = useState('');
+  const [industryFilter, setIndustryFilter] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [industries, setIndustries] = useState<string[]>([]);
 
-  // Load companies on mount
   useEffect(() => {
     loadCompanies();
   }, []);
 
-  // Load industries when companies change
   useEffect(() => {
     getIndustries().then(setIndustries);
   }, [companies]);
@@ -36,77 +46,32 @@ export default function Companies() {
     try {
       const data = await getCompanies();
       setCompanies(data);
-    } catch (error) {
-      console.error('Failed to load companies:', error);
+    } catch (err) {
+      console.error('Failed to load companies:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Get unique industries for the filter dropdown
-  const industryOptions = useMemo(() => {
-    return [
-      { value: '', label: 'All Industries' },
-      ...industries.map((i) => ({ value: i, label: i })),
-    ];
-  }, [industries]);
-
-  // Filter companies based on search and industry
   const filteredCompanies = useMemo(() => {
-    return companies.filter((company) => {
+    return companies.filter((c) => {
       const matchesSearch =
         !searchTerm ||
-        company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.industry?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.address?.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesIndustry =
-        !industryFilter || company.industry === industryFilter;
-
+        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.industry?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesIndustry = industryFilter === 'all' || c.industry === industryFilter;
       return matchesSearch && matchesIndustry;
     });
   }, [companies, searchTerm, industryFilter]);
 
-  // Get parent company name by ID
   const getParentName = (parentId: string | null | undefined): string | null => {
     if (!parentId) return null;
-    const parent = companies.find((c) => c.id === parentId);
-    return parent?.name || null;
+    return companies.find((c) => c.id === parentId)?.name ?? null;
   };
 
-  // Format currency
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
-  // Handle card click (edit mode)
-  const handleCardClick = (company: Company) => {
-    setSelectedCompany(company);
-    setIsModalOpen(true);
-  };
-
-  // Handle add button click
-  const handleAddClick = () => {
-    setSelectedCompany(null);
-    setIsModalOpen(true);
-  };
-
-  // Handle modal close
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedCompany(null);
-  };
-
-  // Handle save (create or update)
   const handleSave = async (data: CompanyFormData) => {
     try {
       if (selectedCompany) {
-        // Update existing company
         const updated = await updateCompany(selectedCompany.id, {
           name: data.name,
           industry: data.industry || undefined,
@@ -115,13 +80,8 @@ export default function Companies() {
           address: data.address || undefined,
           parentId: data.parentId,
         });
-        if (updated) {
-          setCompanies((prev) =>
-            prev.map((c) => (c.id === updated.id ? updated : c))
-          );
-        }
+        if (updated) setCompanies((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
       } else {
-        // Create new company
         const created = await createCompany({
           name: data.name,
           industry: data.industry || undefined,
@@ -132,115 +92,112 @@ export default function Companies() {
         });
         setCompanies((prev) => [...prev, created]);
       }
-      handleModalClose();
-    } catch (error) {
-      console.error('Failed to save company:', error);
+      setIsModalOpen(false);
+      setSelectedCompany(null);
+    } catch (err) {
+      console.error('Failed to save company:', err);
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Companies</h1>
-          <p className="mt-1 text-gray-600">
-            Manage your company accounts and relationships.
-          </p>
+          <h1 className="text-2xl font-semibold text-foreground">Companies</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Manage your company accounts and relationships.</p>
         </div>
-        <Button onClick={handleAddClick}>
+        <Button onClick={() => { setSelectedCompany(null); setIsModalOpen(true); }}>
           <Building2 className="h-4 w-4 mr-2" />
           Add Company
         </Button>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search companies..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-        <div className="w-full sm:w-48">
-          <Select
-            options={industryOptions}
-            value={industryFilter}
-            onChange={(e) => setIndustryFilter(e.target.value)}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search companies..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
           />
         </div>
+        <Select value={industryFilter} onValueChange={setIndustryFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="All Industries" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Industries</SelectItem>
+            {industries.map((i) => (
+              <SelectItem key={i} value={i}>{i}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Company Cards Grid */}
+      {/* Grid */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-gray-500">Loading companies...</div>
+        <div className="flex items-center justify-center py-16 text-muted-foreground">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-3" />
+          Loading companies...
         </div>
       ) : filteredCompanies.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <Building2 className="h-12 w-12 text-gray-300 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">No companies found</h3>
-          <p className="mt-1 text-gray-500">
-            {searchTerm || industryFilter
-              ? 'Try adjusting your search or filter criteria.'
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <Building2 className="h-12 w-12 text-muted-foreground/30 mb-3" />
+          <p className="text-sm font-medium text-foreground">No companies found</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {searchTerm || industryFilter !== 'all'
+              ? 'Try adjusting your filters.'
               : 'Get started by adding your first company.'}
           </p>
+          {!searchTerm && industryFilter === 'all' && (
+            <Button className="mt-4" onClick={() => { setSelectedCompany(null); setIsModalOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Company
+            </Button>
+          )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredCompanies.map((company) => {
             const parentName = getParentName(company.parentId);
             return (
-              <div
+              <Card
                 key={company.id}
-                onClick={() => handleCardClick(company)}
-                className="bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer border border-gray-200"
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => { setSelectedCompany(company); setIsModalOpen(true); }}
               >
-                <div className="p-6">
-                  {/* Company Header */}
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Building2 className="h-6 w-6 text-blue-600" />
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Building2 className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900 truncate">
-                        {company.name}
-                      </h3>
+                      <h3 className="text-sm font-semibold text-foreground truncate">{company.name}</h3>
                       {parentName && (
-                        <p className="text-sm text-gray-500 truncate">
-                          Subsidiary of {parentName}
-                        </p>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">Subsidiary of {parentName}</p>
                       )}
                     </div>
                   </div>
 
-                  {/* Company Details */}
-                  <div className="mt-4 space-y-3">
+                  <div className="mt-4 space-y-2.5">
                     {company.industry && (
-                      <div className="flex items-center text-sm">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          {company.industry}
-                        </span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">{company.industry}</Badge>
                         {company.size && (
-                          <span className="ml-2 text-gray-500">
-                            {company.size} employees
-                          </span>
+                          <span className="text-xs text-muted-foreground">{company.size} employees</span>
                         )}
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center text-gray-600">
-                        <Users className="h-4 w-4 mr-1.5" />
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Users className="h-3.5 w-3.5" />
                         <span>{company.contactCount} contacts</span>
                       </div>
-                      <div className="flex items-center text-gray-600">
-                        <DollarSign className="h-4 w-4 mr-0.5" />
+                      <div className="flex items-center gap-0.5">
+                        <DollarSign className="h-3.5 w-3.5" />
                         <span>{formatCurrency(company.totalDealValue)}</span>
                       </div>
                     </div>
@@ -251,24 +208,23 @@ export default function Companies() {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                       >
-                        <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                        <ExternalLink className="h-3 w-3" />
                         Visit website
                       </a>
                     )}
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
       )}
 
-      {/* Company Modal */}
       <CompanyModal
         isOpen={isModalOpen}
-        onClose={handleModalClose}
+        onClose={() => { setIsModalOpen(false); setSelectedCompany(null); }}
         onSave={handleSave}
         company={selectedCompany}
         companies={companies}

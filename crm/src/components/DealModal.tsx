@@ -1,8 +1,21 @@
 import { useState, useEffect } from 'react';
-import Modal from './Modal';
-import Button from './Button';
-import Input from './Input';
-import Select from './Select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { DEAL_STAGES, type Deal } from '../api/deals';
 
 interface DealModalProps {
@@ -39,14 +52,7 @@ const initialFormState: DealFormData = {
   expectedCloseDate: '',
 };
 
-export default function DealModal({
-  isOpen,
-  onClose,
-  onSave,
-  deal,
-  companies,
-  contacts,
-}: DealModalProps) {
+export default function DealModal({ isOpen, onClose, onSave, deal, companies, contacts }: DealModalProps) {
   const [formData, setFormData] = useState<DealFormData>(initialFormState);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -74,151 +80,118 @@ export default function DealModal({
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Deal name is required';
-    }
-
-    if (formData.value <= 0) {
-      newErrors.value = 'Value must be greater than 0';
-    }
-
-    if (!formData.stage) {
-      newErrors.stage = 'Stage is required';
-    }
-
+    if (!formData.name.trim()) newErrors.name = 'Deal name is required';
+    if (formData.value <= 0) newErrors.value = 'Value must be greater than 0';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
-      onSave(formData);
-      onClose();
-    }
+    if (validate()) { onSave(formData); onClose(); }
   };
 
-  const handleCompanyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const companyId = e.target.value;
+  const handleCompanyChange = (companyId: string) => {
     const company = companies.find((c) => c.value === companyId);
-    setFormData((prev) => ({
-      ...prev,
-      companyId,
-      companyName: company?.label || '',
-    }));
+    setFormData((prev) => ({ ...prev, companyId: companyId === 'none' ? '' : companyId, companyName: company?.label || '' }));
   };
 
-  const handleContactChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const contactId = e.target.value;
+  const handleContactChange = (contactId: string) => {
     const contact = contacts.find((c) => c.value === contactId);
-    setFormData((prev) => ({
-      ...prev,
-      contactId,
-      contactName: contact?.label || '',
-    }));
+    setFormData((prev) => ({ ...prev, contactId: contactId === 'none' ? '' : contactId, contactName: contact?.label || '' }));
   };
-
-  const stageOptions = [
-    { value: '', label: 'Select stage...' },
-    ...DEAL_STAGES.map((s) => ({ value: s.value, label: s.label })),
-  ];
-
-  const companyOptions = [{ value: '', label: 'Select company...' }, ...companies];
-  const contactOptions = [{ value: '', label: 'Select contact...' }, ...contacts];
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={isEditMode ? 'Edit Deal' : 'Add New Deal'}
-      className="max-w-xl"
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Deal Name"
-          value={formData.name}
-          onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-          error={errors.name}
-          placeholder="Enter deal name"
-          required
-        />
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>{isEditMode ? 'Edit Deal' : 'Add New Deal'}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label>Deal Name <span className="text-destructive">*</span></Label>
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+              placeholder="Enter deal name"
+            />
+            {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+          </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Select
-            label="Company"
-            options={companyOptions}
-            value={formData.companyId}
-            onChange={handleCompanyChange}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Company</Label>
+              <Select value={formData.companyId || 'none'} onValueChange={handleCompanyChange}>
+                <SelectTrigger><SelectValue placeholder="Select company" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No company</SelectItem>
+                  {companies.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Contact</Label>
+              <Select value={formData.contactId || 'none'} onValueChange={handleContactChange}>
+                <SelectTrigger><SelectValue placeholder="Select contact" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No contact</SelectItem>
+                  {contacts.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-          <Select
-            label="Contact"
-            options={contactOptions}
-            value={formData.contactId}
-            onChange={handleContactChange}
-          />
-        </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Value ($) <span className="text-destructive">*</span></Label>
+              <Input
+                type="number"
+                value={formData.value || ''}
+                onChange={(e) => setFormData((prev) => ({ ...prev, value: parseFloat(e.target.value) || 0 }))}
+                placeholder="0"
+                min="0"
+                step="100"
+              />
+              {errors.value && <p className="text-xs text-destructive">{errors.value}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label>Stage</Label>
+              <Select value={formData.stage} onValueChange={(v) => setFormData((prev) => ({ ...prev, stage: v as Deal['stage'] }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {DEAL_STAGES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Value ($)"
-            type="number"
-            value={formData.value || ''}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, value: parseFloat(e.target.value) || 0 }))
-            }
-            error={errors.value}
-            placeholder="0"
-            min="0"
-            step="100"
-            required
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Probability (%)</Label>
+              <Input
+                type="number"
+                value={formData.probability}
+                onChange={(e) => setFormData((prev) => ({ ...prev, probability: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) }))}
+                min="0"
+                max="100"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Expected Close Date</Label>
+              <Input
+                type="date"
+                value={formData.expectedCloseDate}
+                onChange={(e) => setFormData((prev) => ({ ...prev, expectedCloseDate: e.target.value }))}
+              />
+            </div>
+          </div>
 
-          <Select
-            label="Stage"
-            options={stageOptions}
-            value={formData.stage}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, stage: e.target.value as Deal['stage'] }))
-            }
-            error={errors.stage}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Probability (%)"
-            type="number"
-            value={formData.probability}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                probability: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)),
-              }))
-            }
-            placeholder="0"
-            min="0"
-            max="100"
-          />
-
-          <Input
-            label="Expected Close Date"
-            type="date"
-            value={formData.expectedCloseDate}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, expectedCloseDate: e.target.value }))
-            }
-          />
-        </div>
-
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit">{isEditMode ? 'Save Changes' : 'Create Deal'}</Button>
-        </div>
-      </form>
-    </Modal>
+          <DialogFooter className="pt-2">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit">{isEditMode ? 'Save Changes' : 'Create Deal'}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

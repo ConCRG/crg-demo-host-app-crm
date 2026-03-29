@@ -13,8 +13,17 @@ import {
   TrendingUp,
   TrendingDown,
 } from 'lucide-react';
-import Card from '../components/Card';
-import Badge from '../components/Badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+} from 'recharts';
 import {
   getStats,
   getPipelineBreakdown,
@@ -28,7 +37,6 @@ import {
   type UpcomingActivity,
 } from '../api/dashboard';
 
-// Format currency
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -38,7 +46,6 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-// Format date
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString('en-US', {
     month: 'short',
@@ -47,24 +54,20 @@ function formatDate(dateString: string): string {
   });
 }
 
-// Get badge color for deal stage
-function getStageBadgeColor(
-  stage: string
-): 'gray' | 'green' | 'yellow' | 'red' | 'blue' | 'purple' {
-  const colorMap: Record<string, 'gray' | 'green' | 'yellow' | 'red' | 'blue' | 'purple'> = {
-    lead: 'gray',
-    qualified: 'blue',
-    proposal: 'yellow',
-    negotiation: 'purple',
-    'closed-won': 'green',
-    'closed-lost': 'red',
+function getStageBadgeClass(stage: string): string {
+  const map: Record<string, string> = {
+    lead: 'bg-muted text-foreground border-border hover:bg-muted',
+    qualified: 'bg-muted text-foreground border-border hover:bg-muted',
+    proposal: 'bg-muted text-foreground border-border hover:bg-muted',
+    negotiation: 'bg-muted text-foreground border-border hover:bg-muted',
+    'closed-won': 'bg-muted text-foreground border-border hover:bg-muted',
+    'closed-lost': 'bg-muted text-foreground border-border hover:bg-muted',
   };
-  return colorMap[stage] || 'gray';
+  return map[stage] ?? map.lead;
 }
 
-// Get stage display label
 function getStageLabel(stage: string): string {
-  const labelMap: Record<string, string> = {
+  const labels: Record<string, string> = {
     lead: 'Lead',
     qualified: 'Qualified',
     proposal: 'Proposal',
@@ -72,27 +75,20 @@ function getStageLabel(stage: string): string {
     'closed-won': 'Won',
     'closed-lost': 'Lost',
   };
-  return labelMap[stage] || stage;
+  return labels[stage] ?? stage;
 }
 
-// Get activity icon
 function ActivityIcon({ type }: { type: string }) {
-  const iconClass = 'h-4 w-4';
+  const cls = 'h-4 w-4';
   switch (type) {
-    case 'call':
-      return <Phone className={iconClass} />;
-    case 'email':
-      return <Mail className={iconClass} />;
-    case 'meeting':
-      return <Calendar className={iconClass} />;
-    case 'task':
-      return <CheckSquare className={iconClass} />;
-    default:
-      return <FileText className={iconClass} />;
+    case 'call': return <Phone className={cls} />;
+    case 'email': return <Mail className={cls} />;
+    case 'meeting': return <Calendar className={cls} />;
+    case 'task': return <CheckSquare className={cls} />;
+    default: return <FileText className={cls} />;
   }
 }
 
-// Stat Card Component
 interface StatCardProps {
   icon: React.ReactNode;
   label: string;
@@ -104,101 +100,94 @@ interface StatCardProps {
 function StatCard({ icon, label, value, trend, loading }: StatCardProps) {
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="animate-pulse">
-          <div className="h-10 w-10 bg-gray-200 rounded-lg mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
-          <div className="h-8 bg-gray-200 rounded w-24"></div>
-        </div>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <div className="animate-pulse space-y-3">
+            <div className="h-10 w-10 bg-muted rounded-lg" />
+            <div className="h-4 bg-muted rounded w-24" />
+            <div className="h-8 bg-muted rounded w-20" />
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex items-center justify-between">
-        <div className="p-2 bg-blue-50 rounded-lg">{icon}</div>
-        {trend !== undefined && (
-          <div
-            className={`flex items-center text-sm font-medium ${trend >= 0 ? 'text-green-600' : 'text-red-600'}`}
-          >
-            {trend >= 0 ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
-            {Math.abs(trend)}%
-          </div>
-        )}
-      </div>
-      <p className="mt-4 text-sm font-medium text-gray-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-gray-900">{value}</p>
-    </div>
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="p-2.5 bg-primary/10 rounded-lg text-primary">{icon}</div>
+          {trend !== undefined && (
+            <div className="flex items-center gap-1 text-sm font-medium text-muted-foreground">
+              {trend >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+              {Math.abs(trend)}%
+            </div>
+          )}
+        </div>
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="mt-1 text-2xl font-semibold text-foreground">{value}</p>
+      </CardContent>
+    </Card>
   );
 }
 
-// Pipeline Bar Component
-interface PipelineBarProps {
+interface PipelineChartProps {
   stages: PipelineStage[];
   loading?: boolean;
 }
 
-function PipelineChart({ stages, loading }: PipelineBarProps) {
+function PipelineChart({ stages, loading }: PipelineChartProps) {
   if (loading) {
     return (
-      <div className="space-y-4 animate-pulse">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i}>
-            <div className="flex justify-between mb-1">
-              <div className="h-4 bg-gray-200 rounded w-20"></div>
-              <div className="h-4 bg-gray-200 rounded w-16"></div>
-            </div>
-            <div className="h-6 bg-gray-200 rounded"></div>
-          </div>
+      <div className="h-48 animate-pulse flex items-end gap-2">
+        {[60, 80, 45, 70, 30].map((h, i) => (
+          <div key={i} className="flex-1 bg-muted rounded-t" style={{ height: `${h}%` }} />
         ))}
       </div>
     );
   }
 
-  // Filter out closed stages for the pipeline chart (only show active pipeline)
   const activeStages = stages.filter(
     (s) => s.stage !== 'closed-won' && s.stage !== 'closed-lost'
   );
-  const maxValue = Math.max(...activeStages.map((s) => s.value), 1);
+
+  const chartData = activeStages.map((s) => ({
+    name: s.label,
+    value: s.value,
+    count: s.count,
+  }));
 
   return (
-    <div className="space-y-4">
-      {activeStages.map((stage) => {
-        const widthPercent = (stage.value / maxValue) * 100;
-        return (
-          <div key={stage.stage}>
-            <div className="flex justify-between mb-1">
-              <span className="text-sm font-medium text-gray-700">
-                {stage.label} ({stage.count})
-              </span>
-              <span className="text-sm font-medium text-gray-900">
-                {formatCurrency(stage.value)}
-              </span>
-            </div>
-            <div className="w-full bg-gray-100 rounded-full h-6 overflow-hidden">
-              <div
-                className="h-6 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
-                style={{
-                  width: `${Math.max(widthPercent, 2)}%`,
-                  backgroundColor: stage.color,
-                }}
-              >
-                {widthPercent > 15 && (
-                  <span className="text-xs font-medium text-white">
-                    {Math.round(widthPercent)}%
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border" />
+        <XAxis
+          dataKey="name"
+          tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
+          axisLine={false}
+          tickLine={false}
+        />
+        <YAxis
+          tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`}
+          tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+          axisLine={false}
+          tickLine={false}
+        />
+        <Tooltip
+          formatter={(value) => [typeof value === 'number' ? formatCurrency(value) : value, 'Value']}
+          contentStyle={{
+            background: 'var(--popover)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            fontSize: '12px',
+          }}
+        />
+        <Bar dataKey="value" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
   );
 }
 
-// Win Rate Gauge Component
 interface WinRateGaugeProps {
   data: WinRateData | null;
   loading?: boolean;
@@ -208,37 +197,27 @@ function WinRateGauge({ data, loading }: WinRateGaugeProps) {
   if (loading || !data) {
     return (
       <div className="flex flex-col items-center animate-pulse">
-        <div className="w-40 h-40 bg-gray-200 rounded-full mb-4"></div>
-        <div className="h-6 bg-gray-200 rounded w-32 mb-2"></div>
-        <div className="h-4 bg-gray-200 rounded w-24"></div>
+        <div className="w-36 h-36 bg-muted rounded-full mb-4" />
+        <div className="h-5 bg-muted rounded w-28 mb-2" />
+        <div className="h-4 bg-muted rounded w-20" />
       </div>
     );
   }
 
-  const circumference = 2 * Math.PI * 58; // radius of 58
+  const circumference = 2 * Math.PI * 54;
   const offset = circumference - (data.winRate / 100) * circumference;
 
   return (
     <div className="flex flex-col items-center">
-      {/* Circular Progress */}
-      <div className="relative w-40 h-40">
-        <svg className="w-40 h-40 transform -rotate-90">
-          {/* Background circle */}
+      <div className="relative w-36 h-36">
+        <svg className="w-36 h-36 transform -rotate-90">
+          <circle cx="72" cy="72" r="54" stroke="var(--muted)" strokeWidth="10" fill="none" />
           <circle
-            cx="80"
-            cy="80"
-            r="58"
-            stroke="#e5e7eb"
-            strokeWidth="12"
-            fill="none"
-          />
-          {/* Progress circle */}
-          <circle
-            cx="80"
-            cy="80"
-            r="58"
-            stroke="#22c55e"
-            strokeWidth="12"
+            cx="72"
+            cy="72"
+            r="54"
+            stroke="var(--primary)"
+            strokeWidth="10"
             fill="none"
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -246,35 +225,28 @@ function WinRateGauge({ data, loading }: WinRateGaugeProps) {
             className="transition-all duration-1000"
           />
         </svg>
-        {/* Center text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-bold text-gray-900">{data.winRate}%</span>
-          <span className="text-sm text-gray-500">Win Rate</span>
+          <span className="text-2xl font-bold text-foreground">{data.winRate}%</span>
+          <span className="text-xs text-muted-foreground">Win Rate</span>
         </div>
       </div>
 
-      {/* Stats below */}
-      <div className="mt-6 w-full grid grid-cols-2 gap-4 text-center">
-        <div className="p-3 bg-green-50 rounded-lg">
-          <p className="text-2xl font-bold text-green-700">{data.wonDeals}</p>
-          <p className="text-xs text-green-600">Won Deals</p>
-          <p className="text-sm font-medium text-green-700 mt-1">
-            {formatCurrency(data.wonValue)}
-          </p>
+      <div className="mt-5 w-full grid grid-cols-2 gap-3 text-center">
+        <div className="p-3 bg-muted/50 rounded-lg border border-border">
+          <p className="text-xl font-bold text-foreground">{data.wonDeals}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Won Deals</p>
+          <p className="text-sm font-medium text-foreground mt-1">{formatCurrency(data.wonValue)}</p>
         </div>
-        <div className="p-3 bg-red-50 rounded-lg">
-          <p className="text-2xl font-bold text-red-700">{data.lostDeals}</p>
-          <p className="text-xs text-red-600">Lost Deals</p>
-          <p className="text-sm font-medium text-red-700 mt-1">
-            {formatCurrency(data.lostValue)}
-          </p>
+        <div className="p-3 bg-muted/50 rounded-lg border border-border">
+          <p className="text-xl font-bold text-foreground">{data.lostDeals}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Lost Deals</p>
+          <p className="text-sm font-medium text-foreground mt-1">{formatCurrency(data.lostValue)}</p>
         </div>
       </div>
     </div>
   );
 }
 
-// Recent Deals List Component
 interface RecentDealsListProps {
   deals: RecentDeal[];
   loading?: boolean;
@@ -283,14 +255,14 @@ interface RecentDealsListProps {
 function RecentDealsList({ deals, loading }: RecentDealsListProps) {
   if (loading) {
     return (
-      <div className="space-y-4 animate-pulse">
+      <div className="space-y-3 animate-pulse">
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="flex items-center justify-between py-3 border-b border-gray-100">
-            <div className="flex-1">
-              <div className="h-4 bg-gray-200 rounded w-40 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-24"></div>
+          <div key={i} className="flex items-center justify-between py-2">
+            <div className="space-y-1.5">
+              <div className="h-4 bg-muted rounded w-36" />
+              <div className="h-3 bg-muted rounded w-24" />
             </div>
-            <div className="h-6 bg-gray-200 rounded w-20"></div>
+            <div className="h-6 bg-muted rounded w-16" />
           </div>
         ))}
       </div>
@@ -298,22 +270,20 @@ function RecentDealsList({ deals, loading }: RecentDealsListProps) {
   }
 
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-border">
       {deals.map((deal) => (
         <Link
           key={deal.id}
           to="/deals"
-          className="flex items-center justify-between py-3 hover:bg-gray-50 -mx-2 px-2 rounded transition-colors"
+          className="flex items-center justify-between py-3 hover:bg-muted/50 -mx-2 px-2 rounded transition-colors"
         >
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-gray-900 truncate">{deal.name}</p>
-            <p className="text-xs text-gray-500">{deal.companyName}</p>
+            <p className="text-sm font-medium text-foreground truncate">{deal.name}</p>
+            <p className="text-xs text-muted-foreground">{deal.companyName}</p>
           </div>
-          <div className="ml-4 flex items-center space-x-3">
-            <span className="text-sm font-medium text-gray-900">
-              {formatCurrency(deal.value)}
-            </span>
-            <Badge color={getStageBadgeColor(deal.stage)}>{getStageLabel(deal.stage)}</Badge>
+          <div className="ml-4 flex items-center gap-3">
+            <span className="text-sm font-medium text-foreground">{formatCurrency(deal.value)}</span>
+            <Badge className={getStageBadgeClass(deal.stage)}>{getStageLabel(deal.stage)}</Badge>
           </div>
         </Link>
       ))}
@@ -321,7 +291,6 @@ function RecentDealsList({ deals, loading }: RecentDealsListProps) {
   );
 }
 
-// Upcoming Activities List Component
 interface UpcomingActivitiesListProps {
   activities: UpcomingActivity[];
   loading?: boolean;
@@ -330,13 +299,13 @@ interface UpcomingActivitiesListProps {
 function UpcomingActivitiesList({ activities, loading }: UpcomingActivitiesListProps) {
   if (loading) {
     return (
-      <div className="space-y-4 animate-pulse">
+      <div className="space-y-3 animate-pulse">
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="flex items-start space-x-3 py-3 border-b border-gray-100">
-            <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
-            <div className="flex-1">
-              <div className="h-4 bg-gray-200 rounded w-48 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-32"></div>
+          <div key={i} className="flex items-start gap-3 py-2">
+            <div className="h-8 w-8 bg-muted rounded-lg" />
+            <div className="flex-1 space-y-1.5">
+              <div className="h-4 bg-muted rounded w-44" />
+              <div className="h-3 bg-muted rounded w-28" />
             </div>
           </div>
         ))}
@@ -344,39 +313,30 @@ function UpcomingActivitiesList({ activities, loading }: UpcomingActivitiesListP
     );
   }
 
+  const typeColorMap: Record<string, string> = {
+    call: 'bg-muted text-foreground',
+    email: 'bg-muted text-foreground',
+    meeting: 'bg-muted text-foreground',
+    task: 'bg-muted text-foreground',
+  };
+
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-border">
       {activities.map((activity) => (
-        <div key={activity.id} className="flex items-start space-x-3 py-3">
-          <div
-            className={`p-2 rounded-lg ${
-              activity.type === 'call'
-                ? 'bg-blue-50 text-blue-600'
-                : activity.type === 'email'
-                  ? 'bg-green-50 text-green-600'
-                  : activity.type === 'meeting'
-                    ? 'bg-purple-50 text-purple-600'
-                    : 'bg-gray-50 text-gray-600'
-            }`}
-          >
+        <div key={activity.id} className="flex items-start gap-3 py-3">
+          <div className={`p-2 rounded-lg flex-shrink-0 ${typeColorMap[activity.type] ?? 'bg-muted text-muted-foreground'}`}>
             <ActivityIcon type={activity.type} />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-gray-900">{activity.subject}</p>
-            <div className="flex items-center mt-1 space-x-2 text-xs text-gray-500">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground truncate">{activity.subject}</p>
+            <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
               {activity.contactName && <span>{activity.contactName}</span>}
-              {activity.contactName && activity.dueDate && <span>-</span>}
-              {activity.dueDate && (
-                <span className="font-medium text-gray-700">
-                  {formatDate(activity.dueDate)}
-                </span>
-              )}
+              {activity.contactName && activity.dueDate && <span>·</span>}
+              {activity.dueDate && <span className="font-medium text-foreground">{formatDate(activity.dueDate)}</span>}
             </div>
           </div>
-          <Badge
-            color={activity.type === 'call' ? 'blue' : activity.type === 'meeting' ? 'purple' : 'gray'}
-          >
-            {activity.type.charAt(0).toUpperCase() + activity.type.slice(1)}
+          <Badge variant="secondary" className="capitalize text-xs flex-shrink-0">
+            {activity.type}
           </Badge>
         </div>
       ))}
@@ -384,7 +344,6 @@ function UpcomingActivitiesList({ activities, loading }: UpcomingActivitiesListP
   );
 }
 
-// Main Dashboard Component
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [pipeline, setPipeline] = useState<PipelineStage[]>([]);
@@ -394,92 +353,104 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadDashboardData() {
+    async function load() {
       setLoading(true);
       try {
-        const [statsData, pipelineData, dealsData, winData, activitiesData] =
-          await Promise.all([
-            getStats(),
-            getPipelineBreakdown(),
-            getRecentDeals(5),
-            getWinRate(),
-            getUpcomingActivities(5),
-          ]);
-
+        const [statsData, pipelineData, dealsData, winData, activitiesData] = await Promise.all([
+          getStats(),
+          getPipelineBreakdown(),
+          getRecentDeals(5),
+          getWinRate(),
+          getUpcomingActivities(5),
+        ]);
         setStats(statsData);
         setPipeline(pipelineData);
         setRecentDeals(dealsData);
         setWinRateData(winData);
         setActivities(activitiesData);
-      } catch (error) {
-        console.error('Failed to load dashboard data:', error);
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err);
       } finally {
         setLoading(false);
       }
     }
-
-    loadDashboardData();
+    load();
   }, []);
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Overview of your sales pipeline and recent activity
         </p>
       </div>
 
-      {/* Row 1: Stat Cards */}
+      {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          icon={<Users className="h-6 w-6 text-blue-600" />}
+          icon={<Users className="h-5 w-5" />}
           label="Total Contacts"
           value={stats?.totalContacts ?? 0}
           loading={loading}
         />
         <StatCard
-          icon={<Building2 className="h-6 w-6 text-blue-600" />}
+          icon={<Building2 className="h-5 w-5" />}
           label="Total Companies"
           value={stats?.totalCompanies ?? 0}
           loading={loading}
         />
         <StatCard
-          icon={<Handshake className="h-6 w-6 text-blue-600" />}
+          icon={<Handshake className="h-5 w-5" />}
           label="Active Deals"
           value={stats?.activeDeals ?? 0}
           loading={loading}
         />
         <StatCard
-          icon={<DollarSign className="h-6 w-6 text-blue-600" />}
+          icon={<DollarSign className="h-5 w-5" />}
           label="Pipeline Value"
           value={stats ? formatCurrency(stats.pipelineValue) : '$0'}
           loading={loading}
         />
       </div>
 
-      {/* Row 2: Pipeline Overview & Win Rate */}
+      {/* Pipeline + Win Rate */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card title="Pipeline Overview">
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">Pipeline Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
             <PipelineChart stages={pipeline} loading={loading} />
-          </Card>
-        </div>
-        <div>
-          <Card title="Win Rate">
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">Win Rate</CardTitle>
+          </CardHeader>
+          <CardContent>
             <WinRateGauge data={winRateData} loading={loading} />
-          </Card>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Row 3: Recent Deals & Upcoming Activities */}
+      {/* Recent Deals + Upcoming Activities */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card title="Recent Deals">
-          <RecentDealsList deals={recentDeals} loading={loading} />
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">Recent Deals</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RecentDealsList deals={recentDeals} loading={loading} />
+          </CardContent>
         </Card>
-        <Card title="Upcoming Activities">
-          <UpcomingActivitiesList activities={activities} loading={loading} />
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">Upcoming Activities</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <UpcomingActivitiesList activities={activities} loading={loading} />
+          </CardContent>
         </Card>
       </div>
     </div>
