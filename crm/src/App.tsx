@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Toaster } from '@/components/ui/sonner';
 import AppLayout from './layouts/AppLayout';
 import {
   Dashboard,
@@ -16,6 +17,7 @@ import Reports from './pages/Reports';
 function App() {
   return (
     <TooltipProvider>
+      <Toaster position="bottom-right" richColors={false} />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<AppLayout />}>

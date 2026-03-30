@@ -1,8 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Plus, DollarSign, TrendingUp } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Plus, DollarSign, TrendingUp, Search, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -17,9 +26,11 @@ import {
   createDeal,
   updateDeal,
   moveDeal,
+  deleteDeal,
   DEAL_STAGES,
   type Deal,
 } from '../api/deals';
+import { useCanDelete } from '@/contexts/RoleContext';
 import { Link } from 'react-router-dom';
 
 const STAGE_CONFIG: Record<
@@ -101,22 +112,34 @@ interface DealCardProps {
   deal: Deal;
   onDragStart: (e: React.DragEvent, deal: Deal) => void;
   onClick: (deal: Deal) => void;
+  onDelete?: (deal: Deal) => void;
 }
 
-function DealCard({ deal, onDragStart, onClick }: DealCardProps) {
+function DealCard({ deal, onDragStart, onClick, onDelete }: DealCardProps) {
   return (
     <div
       draggable
       onDragStart={(e) => onDragStart(e, deal)}
       className="bg-white rounded-lg border border-border p-3 cursor-grab active:cursor-grabbing hover:shadow-md hover:border-primary/30 transition-all duration-150 select-none"
     >
-      <Link
-        to={`/deals/${deal.id}`}
-        onClick={(e) => e.stopPropagation()}
-        className="block text-sm font-medium text-foreground truncate hover:underline mb-1"
-      >
-        {deal.name}
-      </Link>
+      <div className="flex items-start justify-between gap-1">
+        <Link
+          to={`/deals/${deal.id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="block text-sm font-medium text-foreground truncate hover:underline mb-1 flex-1 min-w-0"
+        >
+          {deal.name}
+        </Link>
+        {onDelete && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(deal); }}
+            className="flex-shrink-0 p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
+            title="Delete deal"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
       <p className="text-xs text-muted-foreground truncate">{deal.companyName}</p>
 
       <div className="mt-3 flex items-center justify-between">
@@ -154,9 +177,10 @@ interface StageColumnProps {
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, stage: Deal['stage']) => void;
   onDealClick: (deal: Deal) => void;
+  onDealDelete?: (deal: Deal) => void;
 }
 
-function StageColumn({ stage, deals, onDragStart, onDragOver, onDrop, onDealClick }: StageColumnProps) {
+function StageColumn({ stage, deals, onDragStart, onDragOver, onDrop, onDealClick, onDealDelete }: StageColumnProps) {
   const config = STAGE_CONFIG[stage];
   const stageDeals = deals.filter((d) => d.stage === stage);
   const totalValue = stageDeals.reduce((sum, d) => sum + d.value, 0);
@@ -182,6 +206,7 @@ function StageColumn({ stage, deals, onDragStart, onDragOver, onDrop, onDealClic
             deal={deal}
             onDragStart={onDragStart}
             onClick={onDealClick}
+            onDelete={onDealDelete}
           />
         ))}
         {stageDeals.length === 0 && (
@@ -193,6 +218,7 @@ function StageColumn({ stage, deals, onDragStart, onDragOver, onDrop, onDealClic
 }
 
 export default function Deals() {
+  const canDelete = useCanDelete();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
   const [draggedDeal, setDraggedDeal] = useState<Deal | null>(null);
@@ -203,6 +229,10 @@ export default function Deals() {
     deal: Deal | null;
     targetStage: Deal['stage'] | null;
   }>({ isOpen: false, deal: null, targetStage: null });
+  const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [stageFilter, setStageFilter] = useState<Deal['stage'] | 'all'>('all');
 
   useEffect(() => { loadDeals(); }, []);
 
@@ -213,11 +243,22 @@ export default function Deals() {
     setLoading(false);
   };
 
-  const totalPipelineValue = deals
+  const filteredDeals = useMemo(() => {
+    return deals.filter((d) => {
+      const matchesSearch =
+        !searchTerm ||
+        d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.companyName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStage = stageFilter === 'all' || d.stage === stageFilter;
+      return matchesSearch && matchesStage;
+    });
+  }, [deals, searchTerm, stageFilter]);
+
+  const totalPipelineValue = filteredDeals
     .filter((d) => d.stage !== 'closed-lost')
     .reduce((sum, d) => sum + d.value, 0);
 
-  const weightedPipelineValue = deals
+  const weightedPipelineValue = filteredDeals
     .filter((d) => d.stage !== 'closed-lost' && d.stage !== 'closed-won')
     .reduce((sum, d) => sum + d.value * (d.probability / 100), 0);
 
@@ -262,10 +303,31 @@ export default function Deals() {
   const handleSaveDeal = async (formData: DealFormData) => {
     if (formData.id) {
       const updated = await updateDeal(formData.id, formData);
-      if (updated) setDeals((prev) => prev.map((d) => (d.id === formData.id ? updated : d)));
+      if (updated) {
+        setDeals((prev) => prev.map((d) => (d.id === formData.id ? updated : d)));
+        toast.success('Deal updated');
+      }
     } else {
       const newDeal = await createDeal(formData);
-      if (newDeal) setDeals((prev) => [...prev, newDeal]);
+      if (newDeal) {
+        setDeals((prev) => [...prev, newDeal]);
+        toast.success('Deal created');
+      }
+    }
+  };
+
+  const handleDeleteDeal = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      await deleteDeal(deleteTarget.id);
+      setDeals((prev) => prev.filter((d) => d.id !== deleteTarget.id));
+      toast.success(`"${deleteTarget.name}" deleted`);
+      setDeleteTarget(null);
+    } catch {
+      toast.error('Failed to delete deal');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -279,7 +341,7 @@ export default function Deals() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Deals Pipeline</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -290,6 +352,35 @@ export default function Deals() {
           <Plus className="h-4 w-4 mr-2" />
           Add Deal
         </Button>
+      </div>
+
+      {/* Search and filter bar */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search deals..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={stageFilter} onValueChange={(v) => setStageFilter(v as Deal['stage'] | 'all')}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="All Stages" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Stages</SelectItem>
+            {DEAL_STAGES.map((s) => (
+              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {(searchTerm || stageFilter !== 'all') && (
+          <span className="text-sm text-muted-foreground self-center">
+            {filteredDeals.length} of {deals.length} deals
+          </span>
+        )}
       </div>
 
       {/* Pipeline stats */}
@@ -325,11 +416,12 @@ export default function Deals() {
             <StageColumn
               key={stage.value}
               stage={stage.value}
-              deals={deals}
+              deals={filteredDeals}
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               onDealClick={(deal) => { setSelectedDeal(deal); setIsModalOpen(true); }}
+              onDealDelete={canDelete ? (deal) => setDeleteTarget(deal) : undefined}
             />
           ))}
         </div>
@@ -343,6 +435,26 @@ export default function Deals() {
         companies={MOCK_COMPANIES}
         contacts={MOCK_CONTACTS}
       />
+
+      {/* Delete deal dialog */}
+      <Dialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Deal</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{' '}
+              <span className="font-medium text-foreground">"{deleteTarget?.name}"</span>?{' '}
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteDeal} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Confirm close dialog */}
       <Dialog

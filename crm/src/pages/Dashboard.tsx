@@ -174,6 +174,7 @@ function PipelineChart({ stages, loading }: PipelineChartProps) {
           tickLine={false}
         />
         <Tooltip
+          cursor={false}
           formatter={(value) => [typeof value === 'number' ? formatCurrency(value) : value, 'Value']}
           contentStyle={{
             background: 'var(--popover)',
@@ -274,7 +275,7 @@ function RecentDealsList({ deals, loading }: RecentDealsListProps) {
       {deals.map((deal) => (
         <Link
           key={deal.id}
-          to="/deals"
+          to={`/deals/${deal.id}`}
           className="flex items-center justify-between py-3 hover:bg-muted/50 -mx-2 px-2 rounded transition-colors"
         >
           <div className="min-w-0 flex-1">

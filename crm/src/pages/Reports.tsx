@@ -213,6 +213,7 @@ export default function Reports() {
                   tickLine={false}
                 />
                 <Tooltip
+                  cursor={false}
                   formatter={(value, name) => [
                     name === 'value' && typeof value === 'number' ? formatCurrency(value) : value,
                     name === 'value' ? 'Value' : 'Count',
@@ -281,6 +282,7 @@ export default function Reports() {
                   tickLine={false}
                 />
                 <Tooltip
+                  cursor={false}
                   formatter={(value) => [typeof value === 'number' ? formatCurrency(value) : value, 'Value']}
                   contentStyle={tooltipStyle()}
                 />
@@ -324,6 +326,7 @@ export default function Reports() {
                     width={80}
                   />
                   <Tooltip
+                    cursor={false}
                     formatter={(value) => [typeof value === 'number' ? formatCurrency(value) : value, 'Value']}
                     contentStyle={tooltipStyle()}
                   />

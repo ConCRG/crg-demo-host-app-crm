@@ -7,7 +7,9 @@ import {
   CheckSquare,
   Check,
   RotateCcw,
+  Trash2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,9 +20,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import ActivityModal from '../components/ActivityModal';
 import {
   getActivities,
+  deleteActivity,
   markComplete,
   markIncomplete,
   type Activity,
@@ -28,6 +39,7 @@ import {
   type ActivityType,
   type ActivityStatus,
 } from '../api/activities';
+import { useCanDelete } from '@/contexts/RoleContext';
 
 const typeIcons: Record<ActivityType, typeof Phone> = {
   Call: Phone,
@@ -97,10 +109,11 @@ interface ActivityItemProps {
   activity: Activity;
   onToggleComplete: (id: string, isComplete: boolean) => void;
   onClick: (activity: Activity) => void;
+  onDelete?: (activity: Activity) => void;
   toggling: string | null;
 }
 
-function ActivityItem({ activity, onToggleComplete, onClick, toggling }: ActivityItemProps) {
+function ActivityItem({ activity, onToggleComplete, onClick, onDelete, toggling }: ActivityItemProps) {
   const Icon = typeIcons[activity.type];
   const isCompleted = activity.status === 'Completed';
   const isOverdue = activity.status === 'Overdue';
@@ -156,11 +169,22 @@ function ActivityItem({ activity, onToggleComplete, onClick, toggling }: Activit
           <Check className="w-3.5 h-3.5" />
         )}
       </button>
+
+      {onDelete && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(activity); }}
+          title="Delete activity"
+          className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-muted transition-colors"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      )}
     </div>
   );
 }
 
 export default function Activities() {
+  const canDelete = useCanDelete();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState<ActivityType | 'all'>('all');
@@ -169,6 +193,8 @@ export default function Activities() {
   const [toggling, setToggling] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Activity | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchActivities = useCallback(async () => {
     setLoading(true);
@@ -191,13 +217,37 @@ export default function Activities() {
   const handleToggleComplete = async (id: string, isCurrentlyComplete: boolean) => {
     setToggling(id);
     try {
-      if (isCurrentlyComplete) await markIncomplete(id);
-      else await markComplete(id);
+      if (isCurrentlyComplete) {
+        await markIncomplete(id);
+        toast.success('Marked as pending');
+      } else {
+        await markComplete(id);
+        toast.success('Marked as complete');
+      }
       await fetchActivities();
-    } catch (err) {
-      console.error('Failed to toggle activity:', err);
+    } catch {
+      toast.error('Failed to update activity');
     } finally {
       setToggling(null);
+    }
+  };
+
+  const handleDeleteActivity = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const ok = await deleteActivity(deleteTarget.id);
+      if (ok) {
+        toast.success('Activity deleted');
+        setDeleteTarget(null);
+        await fetchActivities();
+      } else {
+        toast.error('Failed to delete activity');
+      }
+    } catch {
+      toast.error('Failed to delete activity');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -307,6 +357,7 @@ export default function Activities() {
                     activity={activity}
                     onToggleComplete={handleToggleComplete}
                     onClick={(a) => { setEditingActivity(a); setIsModalOpen(true); }}
+                    onDelete={canDelete ? (a) => setDeleteTarget(a) : undefined}
                     toggling={toggling}
                   />
                 ))}
@@ -319,9 +370,34 @@ export default function Activities() {
       <ActivityModal
         isOpen={isModalOpen}
         onClose={() => { setIsModalOpen(false); setEditingActivity(null); }}
-        onSave={() => { setIsModalOpen(false); setEditingActivity(null); fetchActivities(); }}
+        onSave={() => {
+          setIsModalOpen(false);
+          setEditingActivity(null);
+          fetchActivities();
+          toast.success(editingActivity ? 'Activity updated' : 'Activity created');
+        }}
         activity={editingActivity}
       />
+
+      {/* Delete confirmation */}
+      <Dialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Activity</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{' '}
+              <span className="font-medium text-foreground">"{deleteTarget?.subject}"</span>?{' '}
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteActivity} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
