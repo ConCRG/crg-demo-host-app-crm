@@ -154,20 +154,18 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (color: str
         title="Pick colour"
       />
       {open && (
-        <div className="absolute z-20 top-9 left-0 bg-popover border border-border rounded-lg shadow-md p-2 grid grid-cols-4 gap-1.5">
+        <div className="absolute z-20 top-9 left-0 bg-popover border border-border rounded-lg shadow-md p-2 flex flex-wrap gap-1.5" style={{ width: '116px' }}>
           {stageColors.map((c) => (
             <button
               key={c.value}
               type="button"
               title={c.label}
               onClick={() => { onChange(c.value); setOpen(false); }}
-              className="w-6 h-6 rounded focus:outline-none focus:ring-2 focus:ring-ring hover:scale-110 transition-transform"
-              style={{ backgroundColor: c.value }}
+              className="flex-shrink-0 flex items-center justify-center rounded focus:outline-none focus:ring-2 focus:ring-ring hover:scale-110 transition-transform"
+              style={{ backgroundColor: c.value, width: '24px', height: '24px' }}
             >
               {value === c.value && (
-                <span className="flex items-center justify-center h-full">
-                  <Check className="h-3 w-3 text-white drop-shadow" />
-                </span>
+                <Check className="h-3 w-3 text-white drop-shadow" />
               )}
             </button>
           ))}
