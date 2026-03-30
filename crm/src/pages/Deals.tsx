@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, DollarSign, TrendingUp, Search, Trash2 } from 'lucide-react';
+import { Plus, DollarSign, TrendingUp, Search, Trash2, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -130,15 +130,24 @@ function DealCard({ deal, onDragStart, onClick, onDelete }: DealCardProps) {
         >
           {deal.name}
         </Link>
-        {onDelete && (
+        <div className="flex items-center gap-0.5 flex-shrink-0">
           <button
-            onClick={(e) => { e.stopPropagation(); onDelete(deal); }}
-            className="flex-shrink-0 p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
-            title="Delete deal"
+            onClick={(e) => { e.stopPropagation(); onClick(deal); }}
+            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title="Edit deal"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Pencil className="h-3.5 w-3.5" />
           </button>
-        )}
+          {onDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(deal); }}
+              className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
+              title="Delete deal"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
       </div>
       <p className="text-xs text-muted-foreground truncate">{deal.companyName}</p>
 
@@ -159,13 +168,6 @@ function DealCard({ deal, onDragStart, onClick, onDelete }: DealCardProps) {
           />
         </div>
       </div>
-
-      <button
-        className="mt-2 text-xs text-primary hover:underline"
-        onClick={(e) => { e.stopPropagation(); onClick(deal); }}
-      >
-        Edit
-      </button>
     </div>
   );
 }

@@ -56,26 +56,25 @@ export default function Landing() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center">
-              <svg viewBox="0 0 64 64" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M 44 20 A 17 17 0 1 0 44 44" stroke="white" strokeWidth="9" strokeLinecap="round"/>
-              </svg>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center">
+                <svg viewBox="0 0 64 64" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M 44 20 A 17 17 0 1 0 44 44" stroke="white" strokeWidth="9" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <div className="leading-tight">
+                <span className="text-sm font-bold tracking-tight block">Curo</span>
+                <span className="text-xs text-muted-foreground tracking-tight block">PeopleOS</span>
+              </div>
             </div>
-            <div className="leading-tight">
-              <span className="text-sm font-bold tracking-tight block">Curo</span>
-              <span className="text-xs text-muted-foreground tracking-tight block">PeopleOS</span>
-            </div>
-          </div>
 
-          <nav className="hidden md:flex items-center gap-6">
-            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Features
-            </a>
-            <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Pricing
-            </a>
-          </nav>
+            <nav className="hidden md:flex items-center gap-6">
+              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Features
+              </a>
+            </nav>
+          </div>
 
           <div className="flex items-center gap-3">
             <Link to="/login">
@@ -100,7 +99,7 @@ export default function Landing() {
               Curo PeopleOS
             </h1>
             <p className="text-background/50 text-sm uppercase tracking-widest mb-6">
-              The CRM built for PeopleOS
+              The CRM built for the driven
             </p>
             <p className="text-background/70 text-lg leading-relaxed mb-10">
               Manage contacts, track deals, and close more business — all in one clean, fast workspace designed for the way your team actually works.
@@ -118,8 +117,8 @@ export default function Landing() {
               <Link to="/login">
                 <Button
                   size="lg"
-                  variant="outline"
-                  className="border-background/30 text-background hover:bg-background/10 hover:text-background w-full sm:w-auto"
+                  variant="ghost"
+                  className="border border-background/30 text-background hover:bg-background/10 hover:text-background w-full sm:w-auto"
                 >
                   Try demo accounts
                 </Button>
