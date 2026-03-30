@@ -11,6 +11,8 @@ import {
   User,
   ChevronDown,
   Shield,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -26,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useRole, useSetRole, useCanViewReports, ROLE_LABELS, type UserRole } from '@/contexts/RoleContext';
 import { useAuthStore } from '@/contexts/AuthContext';
+import { useThemeStore } from '@/contexts/ThemeContext';
 
 const mainNavigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, end: true },
@@ -52,6 +55,8 @@ export default function AppLayout() {
   const canViewReports = useCanViewReports();
   const user = useAuthStore((s) => s.user);
   const logoutAuth = useAuthStore((s) => s.logout);
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggle);
 
   const handleLogout = () => {
     logoutAuth();
@@ -65,7 +70,7 @@ export default function AppLayout() {
   return (
     <div className="flex h-screen bg-muted/30">
       {/* Sidebar */}
-      <aside className="w-64 flex flex-col bg-white border-r border-border flex-shrink-0">
+      <aside className="w-64 flex flex-col bg-background border-r border-border flex-shrink-0">
         {/* Logo */}
         <div className="h-16 flex items-center px-5 border-b border-border">
           <div className="flex items-center gap-2.5">
@@ -193,7 +198,7 @@ export default function AppLayout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-border flex items-center justify-between px-6 flex-shrink-0">
+        <header className="h-16 bg-background border-b border-border flex items-center justify-between px-6 flex-shrink-0">
           <div />
           {/* Role switcher */}
           <div className="flex items-center gap-3">
@@ -222,6 +227,14 @@ export default function AppLayout() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-md border border-border hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+              title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            >
+              {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            </button>
 
             <Avatar className="h-8 w-8">
               <AvatarFallback className="text-sm bg-primary text-primary-foreground">

@@ -6,6 +6,7 @@ import './index.css'
 import App from './App.tsx'
 import { useRoleStore } from './contexts/RoleContext.tsx'
 import { useAuthStore } from './contexts/AuthContext.tsx'
+import { ThemeProvider } from './contexts/ThemeContext.tsx'
 
 const crgEnabled = import.meta.env.VITE_CRG_ENABLED === 'true';
 
@@ -38,20 +39,24 @@ function Root() {
   if (crgEnabled) {
     return (
       <StrictMode>
-        <CRGProvider
-          config={config}
-          mountTrainUI={(container, bus) => mountSidecarUI(container, bus, config)}
-          mountAssistUI={(container, bus) => mountAssistUI(container, bus, config)}
-        >
-          <App />
-        </CRGProvider>
+        <ThemeProvider>
+          <CRGProvider
+            config={config}
+            mountTrainUI={(container, bus) => mountSidecarUI(container, bus, config)}
+            mountAssistUI={(container, bus) => mountAssistUI(container, bus, config)}
+          >
+            <App />
+          </CRGProvider>
+        </ThemeProvider>
       </StrictMode>
     );
   }
 
   return (
     <StrictMode>
-      <App />
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
     </StrictMode>
   );
 }
