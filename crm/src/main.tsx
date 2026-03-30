@@ -5,6 +5,7 @@ import { mountSidecarUI, mountAssistUI } from '@crg/sidecar-ui'
 import './index.css'
 import App from './App.tsx'
 import { useRoleStore } from './contexts/RoleContext.tsx'
+import { useAuthStore } from './contexts/AuthContext.tsx'
 
 const crgEnabled = import.meta.env.VITE_CRG_ENABLED === 'true';
 
@@ -26,9 +27,11 @@ const baseConfig = {
 
 function Root() {
   const role = useRoleStore((s) => s.role);
+  const authUser = useAuthStore((s) => s.user);
 
   const config = {
     ...baseConfig,
+    userId: authUser?.id ?? 'demo-user-001',
     userRole: role,
   };
 

@@ -1,4 +1,4 @@
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -25,9 +25,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useRole, useSetRole, useCanViewReports, ROLE_LABELS, type UserRole } from '@/contexts/RoleContext';
+import { useAuthStore } from '@/contexts/AuthContext';
 
 const mainNavigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard, end: true },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, end: true },
   { name: 'Contacts', href: '/contacts', icon: Users, end: false },
   { name: 'Companies', href: '/companies', icon: Building2, end: false },
   { name: 'Deals', href: '/deals', icon: Handshake, end: false },
@@ -45,9 +46,21 @@ const roleBadgeClass: Record<UserRole, string> = {
 };
 
 export default function AppLayout() {
+  const navigate = useNavigate();
   const role = useRole();
   const setRole = useSetRole();
   const canViewReports = useCanViewReports();
+  const user = useAuthStore((s) => s.user);
+  const logoutAuth = useAuthStore((s) => s.logout);
+
+  const handleLogout = () => {
+    logoutAuth();
+    navigate('/login');
+  };
+
+  const initials = user?.initials ?? '??';
+  const displayName = user?.name ?? 'User';
+  const displayEmail = user?.email ?? '';
 
   return (
     <div className="flex h-screen bg-muted/30">
@@ -56,12 +69,15 @@ export default function AppLayout() {
         {/* Logo */}
         <div className="h-16 flex items-center px-5 border-b border-border">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-              <Handshake className="h-4 w-4 text-primary-foreground" />
+            <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center flex-shrink-0">
+              <svg viewBox="0 0 64 64" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 44 20 A 17 17 0 1 0 44 44" stroke="white" strokeWidth="9" strokeLinecap="round"/>
+              </svg>
             </div>
-            <span className="text-base font-semibold text-foreground tracking-tight">
-              CRM Demo
-            </span>
+            <div className="leading-tight">
+              <span className="text-sm font-bold text-foreground tracking-tight block">Curo</span>
+              <span className="text-xs text-muted-foreground tracking-tight block">PeopleOS</span>
+            </div>
           </div>
         </div>
 
@@ -141,15 +157,15 @@ export default function AppLayout() {
               <button className="flex items-center gap-3 w-full px-3 py-2 rounded-md hover:bg-accent transition-colors text-left">
                 <Avatar className="h-7 w-7 flex-shrink-0">
                   <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                    JD
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate leading-none">
-                    John Doe
+                    {displayName}
                   </p>
                   <p className="text-xs text-muted-foreground truncate mt-0.5">
-                    john@example.com
+                    {displayEmail}
                   </p>
                 </div>
               </button>
@@ -162,7 +178,10 @@ export default function AppLayout() {
                 Profile
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive focus:text-destructive">
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={handleLogout}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign out
               </DropdownMenuItem>
@@ -206,7 +225,7 @@ export default function AppLayout() {
 
             <Avatar className="h-8 w-8">
               <AvatarFallback className="text-sm bg-primary text-primary-foreground">
-                JD
+                {initials}
               </AvatarFallback>
             </Avatar>
           </div>
