@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User, Layers, Grid3X3, Bell, Plus, Trash2, GripVertical, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -132,6 +132,51 @@ function ProfileTab({
   );
 }
 
+function ColorPicker({ value, onChange }: { value: string; onChange: (color: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="relative flex-shrink-0" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-7 h-7 rounded-md border border-border shadow-sm flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-ring"
+        style={{ backgroundColor: value }}
+        title="Pick colour"
+      />
+      {open && (
+        <div className="absolute z-20 top-9 left-0 bg-popover border border-border rounded-lg shadow-md p-2 grid grid-cols-4 gap-1.5">
+          {stageColors.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              title={c.label}
+              onClick={() => { onChange(c.value); setOpen(false); }}
+              className="w-6 h-6 rounded focus:outline-none focus:ring-2 focus:ring-ring hover:scale-110 transition-transform"
+              style={{ backgroundColor: c.value }}
+            >
+              {value === c.value && (
+                <span className="flex items-center justify-center h-full">
+                  <Check className="h-3 w-3 text-white drop-shadow" />
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PipelineTab({ stages, onSave }: { stages: PipelineStage[]; onSave: (stages: PipelineStage[]) => void }) {
   const [localStages, setLocalStages] = useState<PipelineStage[]>(stages);
   const [isSaving, setIsSaving] = useState(false);
@@ -174,16 +219,10 @@ function PipelineTab({ stages, onSave }: { stages: PipelineStage[]; onSave: (sta
         {localStages.map((stage) => (
           <div key={stage.id} className="flex items-center gap-3 p-3 border border-border rounded-lg bg-card">
             <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
-            <select
+            <ColorPicker
               value={stage.color}
-              onChange={(e) => handleStageChange(stage.id, 'color', e.target.value)}
-              className="w-8 h-8 rounded cursor-pointer border border-border"
-              style={{ backgroundColor: stage.color }}
-            >
-              {stageColors.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
+              onChange={(color) => handleStageChange(stage.id, 'color', color)}
+            />
             <Input
               value={stage.name}
               onChange={(e) => handleStageChange(stage.id, 'name', e.target.value)}

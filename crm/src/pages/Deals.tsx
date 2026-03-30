@@ -350,7 +350,7 @@ export default function Deals() {
             Drag and drop deals between stages to update their progress.
           </p>
         </div>
-        <Button onClick={() => { setSelectedDeal(null); setIsModalOpen(true); }}>
+        <Button id="btn-add-deal" onClick={() => { setSelectedDeal(null); setIsModalOpen(true); }}>
           <Plus className="h-4 w-4 mr-2" />
           Add Deal
         </Button>
