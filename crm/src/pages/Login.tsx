@@ -52,9 +52,9 @@ export default function Login() {
       {/* Left panel — branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-foreground flex-col justify-between p-12">
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-background/10 border border-background/20 flex items-center justify-center">
-            <svg viewBox="0 0 64 64" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M 44 20 A 17 17 0 1 0 44 44" stroke="white" strokeWidth="9" strokeLinecap="round"/>
+          <div className="w-7 h-7 rounded-lg bg-background/10 border border-background/20 flex items-center justify-center text-background">
+            <svg viewBox="0 0 64 64" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <path d="M 44 20 A 17 17 0 1 0 44 44" stroke="currentColor" strokeWidth="9" strokeLinecap="round"/>
             </svg>
           </div>
           <div className="leading-tight">
@@ -99,9 +99,9 @@ export default function Login() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
         {/* Mobile logo */}
         <Link to="/" className="flex items-center gap-2.5 mb-10 lg:hidden">
-          <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center">
-            <svg viewBox="0 0 64 64" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M 44 20 A 17 17 0 1 0 44 44" stroke="white" strokeWidth="9" strokeLinecap="round"/>
+          <div className="w-7 h-7 rounded-lg bg-foreground text-background flex items-center justify-center">
+            <svg viewBox="0 0 64 64" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <path d="M 44 20 A 17 17 0 1 0 44 44" stroke="currentColor" strokeWidth="9" strokeLinecap="round"/>
             </svg>
           </div>
           <div className="leading-tight">

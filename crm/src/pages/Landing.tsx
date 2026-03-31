@@ -7,8 +7,11 @@ import {
   CheckCircle,
   Target,
   Shield,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useThemeStore } from '@/contexts/ThemeContext';
 
 const features = [
   {
@@ -51,39 +54,65 @@ const bullets = [
 ];
 
 export default function Landing() {
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggle);
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center">
-                <svg viewBox="0 0 64 64" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M 44 20 A 17 17 0 1 0 44 44" stroke="white" strokeWidth="9" strokeLinecap="round"/>
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="relative flex h-14 sm:h-16 items-center justify-between gap-3">
+            <Link to="/" className="relative z-10 flex items-center gap-2.5 flex-shrink-0 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-foreground text-background flex items-center justify-center flex-shrink-0">
+                <svg viewBox="0 0 64 64" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M 44 20 A 17 17 0 1 0 44 44" stroke="currentColor" strokeWidth="9" strokeLinecap="round"/>
                 </svg>
               </div>
-              <div className="leading-tight">
-                <span className="text-sm font-bold tracking-tight block">Curo</span>
-                <span className="text-xs text-muted-foreground tracking-tight block">PeopleOS</span>
+              <div className="leading-tight min-w-0">
+                <span className="text-sm font-bold tracking-tight block truncate">Curo</span>
+                <span className="text-xs text-muted-foreground tracking-tight block truncate">PeopleOS</span>
               </div>
-            </div>
+            </Link>
 
-            <nav className="hidden md:flex items-center gap-6">
-              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Features
-              </a>
+            <nav
+              className="pointer-events-none absolute inset-0 hidden md:flex items-center justify-center"
+              aria-label="Page sections"
+            >
+              
             </nav>
+
+            <div className="relative z-10 flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="p-2 rounded-md border border-border hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+                title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+              >
+                {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+              </button>
+              <Link to="/login" className="hidden sm:block">
+                <Button variant="ghost" size="sm">
+                  Log in
+                </Button>
+              </Link>
+              <Link to="/login">
+                <Button size="sm" className="text-xs sm:text-sm px-3 sm:px-4">
+                  <span className="sm:hidden">Start</span>
+                  <span className="hidden sm:inline">Get started</span>
+                </Button>
+              </Link>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" size="sm">Log in</Button>
-            </Link>
-            <Link to="/login">
-              <Button size="sm">Get started</Button>
-            </Link>
-          </div>
+          <nav className="md:hidden flex justify-center pb-2.5 pt-0.5" aria-label="Page sections">
+            <a
+              href="#features"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-1.5 px-4 rounded-full bg-muted/60 hover:bg-muted"
+            >
+              Features
+            </a>
+          </nav>
         </div>
       </header>
 
@@ -252,9 +281,9 @@ export default function Landing() {
       <footer className="border-t border-border py-8 bg-background">
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded bg-foreground flex items-center justify-center">
-              <svg viewBox="0 0 64 64" className="h-3 w-3" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M 44 20 A 17 17 0 1 0 44 44" stroke="white" strokeWidth="10" strokeLinecap="round"/>
+            <div className="w-5 h-5 rounded bg-foreground text-background flex items-center justify-center">
+              <svg viewBox="0 0 64 64" className="h-3 w-3" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <path d="M 44 20 A 17 17 0 1 0 44 44" stroke="currentColor" strokeWidth="10" strokeLinecap="round"/>
               </svg>
             </div>
             <span className="text-sm font-semibold">Curo</span>

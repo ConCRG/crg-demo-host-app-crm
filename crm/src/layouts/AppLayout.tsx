@@ -74,9 +74,9 @@ export default function AppLayout() {
         {/* Logo */}
         <div className="h-16 flex items-center px-5 border-b border-border">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center flex-shrink-0">
-              <svg viewBox="0 0 64 64" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M 44 20 A 17 17 0 1 0 44 44" stroke="white" strokeWidth="9" strokeLinecap="round"/>
+            <div className="w-7 h-7 rounded-lg bg-foreground text-background flex items-center justify-center flex-shrink-0">
+              <svg viewBox="0 0 64 64" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <path d="M 44 20 A 17 17 0 1 0 44 44" stroke="currentColor" strokeWidth="9" strokeLinecap="round"/>
               </svg>
             </div>
             <div className="leading-tight">
