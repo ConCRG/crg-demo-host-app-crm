@@ -4,14 +4,16 @@ import { CRGProvider } from '@crg/connector-react'
 import { mountSidecarUI, mountAssistUI } from '@crg/sidecar-ui'
 import './index.css'
 import App from './App.tsx'
+import { useRoleStore } from './contexts/RoleContext.tsx'
+import { useAuthStore } from './contexts/AuthContext.tsx'
+import { ThemeProvider } from './contexts/ThemeContext.tsx'
 
 const crgEnabled = import.meta.env.VITE_CRG_ENABLED === 'true';
 
-const config = {
+const baseConfig = {
   appId: 'crm-demo',
   serviceUrl: import.meta.env.VITE_CRG_SERVICE_URL ?? 'http://localhost:3001',
   graphServiceUrl: import.meta.env.VITE_CRG_GRAPH_SERVICE_URL ?? 'http://localhost:8002',
-  userRole: 'admin',
   userId: 'demo-user-001',
   backgroundCapture: {
     enabled: true,
@@ -25,23 +27,36 @@ const config = {
 };
 
 function Root() {
+  const role = useRoleStore((s) => s.role);
+  const authUser = useAuthStore((s) => s.user);
+
+  const config = {
+    ...baseConfig,
+    userId: authUser?.id ?? 'demo-user-001',
+    userRole: role,
+  };
+
   if (crgEnabled) {
     return (
       <StrictMode>
-        <CRGProvider 
-          config={config} 
-          mountTrainUI={(container, bus) => mountSidecarUI(container, bus, config)}
-          mountAssistUI={(container, bus) => mountAssistUI(container, bus, config)}
-        >
-          <App />
-        </CRGProvider>
+        <ThemeProvider>
+          <CRGProvider
+            config={config}
+            mountTrainUI={(container, bus) => mountSidecarUI(container, bus, config)}
+            mountAssistUI={(container, bus) => mountAssistUI(container, bus, config)}
+          >
+            <App />
+          </CRGProvider>
+        </ThemeProvider>
       </StrictMode>
     );
   }
 
   return (
     <StrictMode>
-      <App />
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
     </StrictMode>
   );
 }

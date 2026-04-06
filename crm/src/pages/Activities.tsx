@@ -7,11 +7,31 @@ import {
   CheckSquare,
   Check,
   RotateCcw,
+  Trash2,
 } from 'lucide-react';
-import { Button, Select, Badge } from '../components';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import ActivityModal from '../components/ActivityModal';
 import {
   getActivities,
+  deleteActivity,
   markComplete,
   markIncomplete,
   type Activity,
@@ -19,8 +39,8 @@ import {
   type ActivityType,
   type ActivityStatus,
 } from '../api/activities';
+import { useCanDelete } from '@/contexts/RoleContext';
 
-// Type icon mapping
 const typeIcons: Record<ActivityType, typeof Phone> = {
   Call: Phone,
   Email: Mail,
@@ -28,103 +48,72 @@ const typeIcons: Record<ActivityType, typeof Phone> = {
   Task: CheckSquare,
 };
 
-// Type colors for icons
 const typeColors: Record<ActivityType, string> = {
-  Call: 'text-blue-600 bg-blue-100',
-  Email: 'text-purple-600 bg-purple-100',
-  Meeting: 'text-green-600 bg-green-100',
-  Task: 'text-orange-600 bg-orange-100',
+  Call: 'bg-muted text-foreground',
+  Email: 'bg-muted text-foreground',
+  Meeting: 'bg-muted text-foreground',
+  Task: 'bg-muted text-foreground',
 };
 
-// Status badge colors
-const statusColors: Record<ActivityStatus, 'green' | 'yellow' | 'red'> = {
-  Completed: 'green',
-  Pending: 'yellow',
-  Overdue: 'red',
+const statusBadgeClass: Record<ActivityStatus, string> = {
+  Completed: 'bg-muted text-foreground border-border hover:bg-muted',
+  Pending: 'bg-muted text-foreground border-border hover:bg-muted',
+  Overdue: 'bg-muted text-foreground border-border hover:bg-muted',
 };
 
-// Related type badge colors
-const relatedTypeColors: Record<string, 'blue' | 'purple' | 'gray'> = {
-  Contact: 'blue',
-  Deal: 'purple',
-  Company: 'gray',
+const relatedTypeBadgeClass: Record<string, string> = {
+  Contact: 'bg-muted text-foreground border-border hover:bg-muted',
+  Deal: 'bg-muted text-foreground border-border hover:bg-muted',
+  Company: 'bg-muted text-foreground border-border hover:bg-muted',
 };
 
-// Format date for display
 function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
+  return new Date(dateString).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   });
 }
 
-// Get date group label
 function getDateGroup(dateString: string): string {
   const date = new Date(dateString);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-
   const weekAgo = new Date(today);
   weekAgo.setDate(weekAgo.getDate() - 7);
-
   const dateOnly = new Date(date);
   dateOnly.setHours(0, 0, 0, 0);
 
-  if (dateOnly.getTime() === today.getTime()) {
-    return 'Today';
-  } else if (dateOnly.getTime() === yesterday.getTime()) {
-    return 'Yesterday';
-  } else if (dateOnly > weekAgo) {
-    return 'This Week';
-  } else {
-    return 'Earlier';
-  }
+  if (dateOnly.getTime() === today.getTime()) return 'Today';
+  if (dateOnly.getTime() === yesterday.getTime()) return 'Yesterday';
+  if (dateOnly > weekAgo) return 'This Week';
+  return 'Earlier';
 }
 
-// Group activities by date
-function groupActivitiesByDate(
-  activities: Activity[]
-): Map<string, Activity[]> {
+function groupActivitiesByDate(activities: Activity[]): Map<string, Activity[]> {
   const groups = new Map<string, Activity[]>();
-  const groupOrder = ['Today', 'Yesterday', 'This Week', 'Earlier'];
-
-  // Initialize groups in order
-  groupOrder.forEach((group) => groups.set(group, []));
-
-  activities.forEach((activity) => {
-    const group = getDateGroup(activity.dueDate);
-    const existing = groups.get(group) || [];
-    existing.push(activity);
-    groups.set(group, existing);
+  ['Today', 'Yesterday', 'This Week', 'Earlier'].forEach((g) => groups.set(g, []));
+  activities.forEach((a) => {
+    const group = getDateGroup(a.dueDate);
+    groups.set(group, [...(groups.get(group) ?? []), a]);
   });
-
-  // Remove empty groups
-  groupOrder.forEach((group) => {
-    if (groups.get(group)?.length === 0) {
-      groups.delete(group);
-    }
+  ['Today', 'Yesterday', 'This Week', 'Earlier'].forEach((g) => {
+    if (groups.get(g)?.length === 0) groups.delete(g);
   });
-
   return groups;
 }
 
-// Activity list item component
-function ActivityItem({
-  activity,
-  onToggleComplete,
-  onClick,
-  toggling,
-}: {
+interface ActivityItemProps {
   activity: Activity;
   onToggleComplete: (id: string, isComplete: boolean) => void;
   onClick: (activity: Activity) => void;
+  onDelete?: (activity: Activity) => void;
   toggling: string | null;
-}) {
+}
+
+function ActivityItem({ activity, onToggleComplete, onClick, onDelete, toggling }: ActivityItemProps) {
   const Icon = typeIcons[activity.type];
   const isCompleted = activity.status === 'Completed';
   const isOverdue = activity.status === 'Overdue';
@@ -132,182 +121,137 @@ function ActivityItem({
 
   return (
     <div
-      className={`flex items-center gap-4 p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer transition-colors ${
+      className={`flex items-center gap-4 p-4 border-b border-border last:border-b-0 cursor-pointer transition-colors ${
         isCompleted ? 'opacity-60' : ''
-      } ${isOverdue ? 'bg-red-50 hover:bg-red-100' : ''}`}
+      } hover:bg-muted/50`}
       onClick={() => onClick(activity)}
     >
-      {/* Type Icon */}
-      <div
-        className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${typeColors[activity.type]}`}
-      >
-        <Icon className="w-5 h-5" />
+      <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${typeColors[activity.type]}`}>
+        <Icon className="w-4 h-4" />
       </div>
 
-      {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h3
-            className={`font-medium text-gray-900 truncate ${
-              isCompleted ? 'line-through' : ''
-            }`}
-          >
-            {activity.subject}
-          </h3>
-        </div>
-        <div className="flex items-center gap-3 mt-1">
-          <Badge color={relatedTypeColors[activity.relatedType]}>
+        <h3 className={`text-sm font-medium text-foreground truncate ${isCompleted ? 'line-through' : ''}`}>
+          {activity.subject}
+        </h3>
+        <div className="flex items-center gap-2 mt-1">
+          <Badge className={`${relatedTypeBadgeClass[activity.relatedType]} text-xs`}>
             {activity.relatedType}
           </Badge>
-          <span className="text-sm text-gray-500 truncate">
-            {activity.relatedTo}
-          </span>
+          <span className="text-xs text-muted-foreground truncate">{activity.relatedTo}</span>
         </div>
       </div>
 
-      {/* Due Date */}
       <div className="flex-shrink-0 text-right">
-        <p
-          className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-500'}`}
-        >
+        <p className={`text-xs ${isOverdue ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
           {formatDate(activity.dueDate)}
         </p>
-        <Badge color={statusColors[activity.status]} className="mt-1">
+        <Badge className={`${statusBadgeClass[activity.status]} text-xs mt-1`}>
           {activity.status}
         </Badge>
       </div>
 
-      {/* Toggle Complete Button */}
       <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleComplete(activity.id, isCompleted);
-        }}
+        onClick={(e) => { e.stopPropagation(); onToggleComplete(activity.id, isCompleted); }}
         disabled={isToggling}
+        title={isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
         className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
           isCompleted
-            ? 'bg-green-100 text-green-600 hover:bg-green-200'
-            : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
+            ? 'bg-muted text-foreground hover:bg-muted/80'
+            : 'bg-muted text-muted-foreground hover:bg-muted-foreground/20'
         } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
-        title={isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
       >
         {isToggling ? (
-          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
         ) : isCompleted ? (
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="w-3.5 h-3.5" />
         ) : (
-          <Check className="w-4 h-4" />
+          <Check className="w-3.5 h-3.5" />
         )}
       </button>
+
+      {onDelete && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(activity); }}
+          title="Delete activity"
+          className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-muted transition-colors"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      )}
     </div>
   );
 }
 
 export default function Activities() {
+  const canDelete = useCanDelete();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
-  const [typeFilter, setTypeFilter] = useState<ActivityType | ''>('');
-  const [statusFilter, setStatusFilter] = useState<ActivityStatus | ''>('');
-  const [dateRangeFilter, setDateRangeFilter] = useState<
-    'today' | 'this_week' | 'this_month' | 'all' | ''
-  >('');
+  const [typeFilter, setTypeFilter] = useState<ActivityType | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<ActivityStatus | 'all'>('all');
+  const [dateRangeFilter, setDateRangeFilter] = useState<'today' | 'this_week' | 'this_month' | 'all'>('all');
   const [toggling, setToggling] = useState<string | null>(null);
-
-  // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Activity | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Fetch activities
   const fetchActivities = useCallback(async () => {
     setLoading(true);
     try {
       const filters: ActivityFilters = {};
-      if (typeFilter) filters.type = typeFilter;
-      if (statusFilter) filters.status = statusFilter;
-      if (dateRangeFilter) filters.dateRange = dateRangeFilter;
-
+      if (typeFilter !== 'all') filters.type = typeFilter;
+      if (statusFilter !== 'all') filters.status = statusFilter;
+      if (dateRangeFilter !== 'all') filters.dateRange = dateRangeFilter;
       const response = await getActivities(filters);
       setActivities(response);
-    } catch (error) {
-      console.error('Failed to fetch activities:', error);
+    } catch (err) {
+      console.error('Failed to fetch activities:', err);
     } finally {
       setLoading(false);
     }
   }, [typeFilter, statusFilter, dateRangeFilter]);
 
-  useEffect(() => {
-    fetchActivities();
-  }, [fetchActivities]);
+  useEffect(() => { fetchActivities(); }, [fetchActivities]);
 
-  // Handle toggle complete
   const handleToggleComplete = async (id: string, isCurrentlyComplete: boolean) => {
     setToggling(id);
     try {
       if (isCurrentlyComplete) {
         await markIncomplete(id);
+        toast.success('Marked as pending');
       } else {
         await markComplete(id);
+        toast.success('Marked as complete');
       }
       await fetchActivities();
-    } catch (error) {
-      console.error('Failed to toggle activity status:', error);
+    } catch {
+      toast.error('Failed to update activity');
     } finally {
       setToggling(null);
     }
   };
 
-  // Handle activity click
-  const handleActivityClick = (activity: Activity) => {
-    setEditingActivity(activity);
-    setIsModalOpen(true);
+  const handleDeleteActivity = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const ok = await deleteActivity(deleteTarget.id);
+      if (ok) {
+        toast.success('Activity deleted');
+        setDeleteTarget(null);
+        await fetchActivities();
+      } else {
+        toast.error('Failed to delete activity');
+      }
+    } catch {
+      toast.error('Failed to delete activity');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
-  // Handle add activity
-  const handleAddActivity = () => {
-    setEditingActivity(null);
-    setIsModalOpen(true);
-  };
-
-  // Handle modal save
-  const handleSave = () => {
-    setIsModalOpen(false);
-    setEditingActivity(null);
-    fetchActivities();
-  };
-
-  // Handle modal close
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingActivity(null);
-  };
-
-  // Filter options
-  const typeOptions = [
-    { value: '', label: 'All Types' },
-    { value: 'Call', label: 'Call' },
-    { value: 'Email', label: 'Email' },
-    { value: 'Meeting', label: 'Meeting' },
-    { value: 'Task', label: 'Task' },
-  ];
-
-  const statusOptions = [
-    { value: '', label: 'All Statuses' },
-    { value: 'Pending', label: 'Pending' },
-    { value: 'Completed', label: 'Completed' },
-    { value: 'Overdue', label: 'Overdue' },
-  ];
-
-  const dateRangeOptions = [
-    { value: '', label: 'All Dates' },
-    { value: 'today', label: 'Today' },
-    { value: 'this_week', label: 'This Week' },
-    { value: 'this_month', label: 'This Month' },
-  ];
-
-  // Group activities by date
   const groupedActivities = groupActivitiesByDate(activities);
-
-  // Calculate stats
   const totalActivities = activities.length;
   const pendingCount = activities.filter((a) => a.status === 'Pending').length;
   const overdueCount = activities.filter((a) => a.status === 'Overdue').length;
@@ -315,15 +259,12 @@ export default function Activities() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Activities</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Track your tasks, calls, emails, and meetings.
-          </p>
+          <h1 className="text-2xl font-semibold text-foreground">Activities</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Track your tasks, calls, emails, and meetings.</p>
         </div>
-        <Button onClick={handleAddActivity}>
+        <Button onClick={() => { setEditingActivity(null); setIsModalOpen(true); }}>
           <Plus className="h-4 w-4 mr-2" />
           Add Activity
         </Button>
@@ -331,99 +272,92 @@ export default function Activities() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-500">Total</p>
-          <p className="text-2xl font-semibold text-gray-900">{totalActivities}</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-500">Pending</p>
-          <p className="text-2xl font-semibold text-yellow-600">{pendingCount}</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-500">Overdue</p>
-          <p className="text-2xl font-semibold text-red-600">{overdueCount}</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-500">Completed</p>
-          <p className="text-2xl font-semibold text-green-600">{completedCount}</p>
-        </div>
+        {[
+          { label: 'Total', value: totalActivities, cls: 'text-foreground' },
+          { label: 'Pending', value: pendingCount, cls: 'text-foreground' },
+          { label: 'Overdue', value: overdueCount, cls: 'text-foreground' },
+          { label: 'Completed', value: completedCount, cls: 'text-foreground' },
+        ].map(({ label, value, cls }) => (
+          <Card key={label}>
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">{label}</p>
+              <p className={`text-2xl font-semibold mt-1 ${cls}`}>{value}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="w-full sm:w-40">
-          <Select
-            options={typeOptions}
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as ActivityType | '')}
-          />
-        </div>
-        <div className="w-full sm:w-40">
-          <Select
-            options={statusOptions}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as ActivityStatus | '')}
-          />
-        </div>
-        <div className="w-full sm:w-40">
-          <Select
-            options={dateRangeOptions}
-            value={dateRangeFilter}
-            onChange={(e) =>
-              setDateRangeFilter(
-                e.target.value as 'today' | 'this_week' | 'this_month' | 'all' | ''
-              )
-            }
-          />
-        </div>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as ActivityType | 'all')}>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="All Types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="Call">Call</SelectItem>
+            <SelectItem value="Email">Email</SelectItem>
+            <SelectItem value="Meeting">Meeting</SelectItem>
+            <SelectItem value="Task">Task</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ActivityStatus | 'all')}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="Pending">Pending</SelectItem>
+            <SelectItem value="Completed">Completed</SelectItem>
+            <SelectItem value="Overdue">Overdue</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={dateRangeFilter} onValueChange={(v) => setDateRangeFilter(v as typeof dateRangeFilter)}>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="All Dates" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Dates</SelectItem>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="this_week">This Week</SelectItem>
+            <SelectItem value="this_month">This Month</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Content */}
+      {/* Activity list */}
       {loading ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-12">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-500">Loading activities...</span>
-          </div>
+        <div className="rounded-md border bg-card flex items-center justify-center py-16 text-muted-foreground">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-3" />
+          Loading activities...
         </div>
       ) : activities.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-12">
-          <div className="text-center">
-            <div className="mx-auto h-12 w-12 text-gray-400">
-              <CheckSquare className="h-12 w-12" />
-            </div>
-            <h3 className="mt-4 text-lg font-medium text-gray-900">
-              No activities found
-            </h3>
-            <p className="mt-2 text-sm text-gray-500">
-              {typeFilter || statusFilter || dateRangeFilter
-                ? 'Try adjusting your filter criteria.'
-                : 'Get started by adding your first activity.'}
-            </p>
-            {!typeFilter && !statusFilter && !dateRangeFilter && (
-              <div className="mt-6">
-                <Button onClick={handleAddActivity}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Activity
-                </Button>
-              </div>
-            )}
-          </div>
+        <div className="rounded-md border bg-card py-16 text-center">
+          <CheckSquare className="mx-auto h-10 w-10 text-muted-foreground/30 mb-3" />
+          <p className="text-sm font-medium text-foreground">No activities found</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {typeFilter !== 'all' || statusFilter !== 'all' || dateRangeFilter !== 'all'
+              ? 'Try adjusting your filter criteria.'
+              : 'Get started by adding your first activity.'}
+          </p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {Array.from(groupedActivities.entries()).map(([group, groupActivities]) => (
             <div key={group}>
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                 {group}
               </h2>
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="rounded-md border bg-card overflow-hidden">
                 {groupActivities.map((activity) => (
                   <ActivityItem
                     key={activity.id}
                     activity={activity}
                     onToggleComplete={handleToggleComplete}
-                    onClick={handleActivityClick}
+                    onClick={(a) => { setEditingActivity(a); setIsModalOpen(true); }}
+                    onDelete={canDelete ? (a) => setDeleteTarget(a) : undefined}
                     toggling={toggling}
                   />
                 ))}
@@ -433,13 +367,37 @@ export default function Activities() {
         </div>
       )}
 
-      {/* Activity Modal */}
       <ActivityModal
         isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onSave={handleSave}
+        onClose={() => { setIsModalOpen(false); setEditingActivity(null); }}
+        onSave={() => {
+          setIsModalOpen(false);
+          setEditingActivity(null);
+          fetchActivities();
+          toast.success(editingActivity ? 'Activity updated' : 'Activity created');
+        }}
         activity={editingActivity}
       />
+
+      {/* Delete confirmation */}
+      <Dialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Activity</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{' '}
+              <span className="font-medium text-foreground">"{deleteTarget?.subject}"</span>?{' '}
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteActivity} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

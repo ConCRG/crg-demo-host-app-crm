@@ -1,5 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Modal, Button, Input, Select } from './index';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { createContact, updateContact, getCompanies, type ContactWithDetails } from '../api/contacts';
 
 interface ContactModalProps {
@@ -45,12 +61,10 @@ export default function ContactModal({ isOpen, onClose, onSave, contact }: Conta
 
   const isEditMode = !!contact;
 
-  // Load companies on mount
   useEffect(() => {
     getCompanies().then(setCompanies);
   }, []);
 
-  // Populate form when editing
   useEffect(() => {
     if (contact) {
       setFormData({
@@ -69,156 +83,140 @@ export default function ContactModal({ isOpen, onClose, onSave, contact }: Conta
     setErrors({});
   }, [contact, isOpen]);
 
-  // Handle input changes
   const handleChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user types
     if (errors[field as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
-  // Handle company change
   const handleCompanyChange = (companyId: string) => {
-    const selectedCompany = companies.find((c) => c.id === companyId);
-    setFormData((prev) => ({
-      ...prev,
-      companyId,
-      company: selectedCompany?.name || '',
-    }));
+    const selected = companies.find((c) => c.id === companyId);
+    setFormData((prev) => ({ ...prev, companyId, company: selected?.name || '' }));
   };
 
-  // Validate form
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
-
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-    }
-
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
+    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!formData.email.trim()) newErrors.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Please enter a valid email';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validate()) return;
-
     setSaving(true);
     try {
-      if (isEditMode && contact) {
-        await updateContact(contact.id, formData);
-      } else {
-        await createContact(formData);
-      }
+      if (isEditMode && contact) await updateContact(contact.id, formData);
+      else await createContact(formData);
       onSave();
-    } catch (error) {
-      console.error('Failed to save contact:', error);
+    } catch (err) {
+      console.error('Failed to save contact:', err);
     } finally {
       setSaving(false);
     }
   };
 
-  // Status options
-  const statusOptions = [
-    { value: 'active', label: 'Active' },
-    { value: 'lead', label: 'Lead' },
-    { value: 'inactive', label: 'Inactive' },
-  ];
-
-  // Company options
-  const companyOptions = [
-    { value: '', label: 'Select a company' },
-    ...companies.map((c) => ({ value: c.id, label: c.name })),
-  ];
-
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={isEditMode ? 'Edit Contact' : 'Add Contact'}
-      className="max-w-xl"
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="First Name"
-            value={formData.firstName}
-            onChange={(e) => handleChange('firstName', e.target.value)}
-            error={errors.firstName}
-            placeholder="John"
-            required
-          />
-          <Input
-            label="Last Name"
-            value={formData.lastName}
-            onChange={(e) => handleChange('lastName', e.target.value)}
-            error={errors.lastName}
-            placeholder="Doe"
-            required
-          />
-        </div>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>{isEditMode ? 'Edit Contact' : 'Add Contact'}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>First Name <span className="text-destructive">*</span></Label>
+              <Input
+                value={formData.firstName}
+                onChange={(e) => handleChange('firstName', e.target.value)}
+                placeholder="John"
+              />
+              {errors.firstName && <p className="text-xs text-destructive">{errors.firstName}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label>Last Name <span className="text-destructive">*</span></Label>
+              <Input
+                value={formData.lastName}
+                onChange={(e) => handleChange('lastName', e.target.value)}
+                placeholder="Doe"
+              />
+              {errors.lastName && <p className="text-xs text-destructive">{errors.lastName}</p>}
+            </div>
+          </div>
 
-        <Input
-          label="Email"
-          type="email"
-          value={formData.email}
-          onChange={(e) => handleChange('email', e.target.value)}
-          error={errors.email}
-          placeholder="john.doe@example.com"
-          required
-        />
+          <div className="space-y-1.5">
+            <Label>Email <span className="text-destructive">*</span></Label>
+            <Input
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleChange('email', e.target.value)}
+              placeholder="john.doe@example.com"
+            />
+            {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+          </div>
 
-        <Input
-          label="Phone"
-          type="tel"
-          value={formData.phone}
-          onChange={(e) => handleChange('phone', e.target.value)}
-          placeholder="+1 (555) 000-0000"
-        />
+          <div className="space-y-1.5">
+            <Label>Phone</Label>
+            <Input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => handleChange('phone', e.target.value)}
+              placeholder="+1 (555) 000-0000"
+            />
+          </div>
 
-        <Select
-          label="Company"
-          options={companyOptions}
-          value={formData.companyId}
-          onChange={(e) => handleCompanyChange(e.target.value)}
-        />
+          <div className="space-y-1.5">
+            <Label>Company</Label>
+            <Select value={formData.companyId || 'none'} onValueChange={(v) => handleCompanyChange(v === 'none' ? '' : v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a company" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No company</SelectItem>
+                {companies.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <Input
-          label="Job Title"
-          value={formData.jobTitle}
-          onChange={(e) => handleChange('jobTitle', e.target.value)}
-          placeholder="Software Engineer"
-        />
+          <div className="space-y-1.5">
+            <Label>Job Title</Label>
+            <Input
+              value={formData.jobTitle}
+              onChange={(e) => handleChange('jobTitle', e.target.value)}
+              placeholder="Software Engineer"
+            />
+          </div>
 
-        <Select
-          label="Status"
-          options={statusOptions}
-          value={formData.status}
-          onChange={(e) => handleChange('status', e.target.value as FormData['status'])}
-        />
+          <div className="space-y-1.5">
+            <Label>Status</Label>
+            <Select value={formData.status} onValueChange={(v) => handleChange('status', v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="lead">Lead</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-          <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={saving}>
-            {saving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Add Contact'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+          <DialogFooter className="pt-2">
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Add Contact'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
