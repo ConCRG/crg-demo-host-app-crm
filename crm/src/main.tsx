@@ -9,8 +9,9 @@ const crgEnabled = import.meta.env.VITE_CRG_ENABLED === 'true';
 
 const config = {
   appId: 'crm-demo',
-  serviceUrl: import.meta.env.VITE_CRG_SERVICE_URL ?? 'http://localhost:3001',
+  serviceUrl: import.meta.env.VITE_CRG_SERVICE_URL ?? 'http://localhost:3002',
   graphServiceUrl: import.meta.env.VITE_CRG_GRAPH_SERVICE_URL ?? 'http://localhost:8002',
+  sourceCodePath: import.meta.env.VITE_CRG_SOURCE_CODE_PATH,
   userRole: 'admin',
   userId: 'demo-user-001',
   backgroundCapture: {
