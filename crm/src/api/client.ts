@@ -1,7 +1,8 @@
 // API Client for CRM
 // Makes real HTTP requests to the backend API
+// VITE_API_URL: override in production (e.g. https://crm-api.xxx.workers.dev/api)
 
-const BASE_URL = '/api';
+const BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
 
 interface ApiResponse<T> {
   data: T;
