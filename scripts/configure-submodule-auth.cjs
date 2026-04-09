@@ -15,8 +15,9 @@ if (fs.existsSync(crgPlatform)) {
 
 const token = process.env.GH_TOKEN || process.env.CRG_SUBMODULE_TOKEN;
 if (!token) {
-  console.warn('No GH_TOKEN or CRG_SUBMODULE_TOKEN set - submodule clone may fail for private repos');
-  process.exit(0);
+  console.error('ERROR: GH_TOKEN or CRG_SUBMODULE_TOKEN environment variable is required');
+  console.error('Set one of these in your Vercel project settings with a GitHub PAT that has repo access');
+  process.exit(1);
 }
 
 const url = `https://x-access-token:${token}@github.com/oshadha-dev/crg-platform.git`;

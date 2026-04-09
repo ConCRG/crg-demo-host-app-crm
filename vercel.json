@@ -1,6 +1,6 @@
 {
-  "installCommand": "npm run vercel:install",
-  "buildCommand": "npm run build:web",
+  "installCommand": "node scripts/configure-submodule-auth.cjs && git submodule update --init --recursive && node scripts/patch-crg-workspace-deps.cjs && node scripts/build-crg-with-npm.cjs && node scripts/vercel-clean-install.cjs",
+  "buildCommand": "npm run build -w crm",
   "outputDirectory": "crm/dist",
   "framework": "vite",
   "rewrites": [

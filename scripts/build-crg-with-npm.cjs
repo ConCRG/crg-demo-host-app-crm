@@ -57,11 +57,32 @@ const resolveTsupCli = (cwd) => {
   throw new Error(`tsup not found in any of:\n${candidates.join("\n")}`);
 };
 
+const ensureTsupAvailable = (cwd) => {
+  const localTsup = path.join(cwd, "node_modules", "tsup");
+
+  try {
+    const stat = fs.lstatSync(localTsup);
+    if (stat.isDirectory()) return;
+    fs.rmSync(localTsup, { force: true });
+  } catch {}
+
+  const coreTsup = path.join(root, "connector-core", "node_modules", "tsup");
+  if (!fs.existsSync(coreTsup)) return;
+
+  const nodeModules = path.join(cwd, "node_modules");
+  if (!fs.existsSync(nodeModules)) {
+    fs.mkdirSync(nodeModules, { recursive: true });
+  }
+  fs.cpSync(coreTsup, localTsup, { recursive: true });
+  console.log(`  Copied tsup from connector-core into ${path.basename(cwd)}`);
+};
+
 const runTsupBuild = (cwd) => {
+  ensureTsupAvailable(cwd);
   const tsupCli = resolveTsupCli(cwd);
   const coreMods = path.join(root, "connector-core", "node_modules");
   const existingNodePath = npmEnv.NODE_PATH || "";
-  execSync(`"${process.execPath}" "${tsupCli}"`, {
+  execSync(`"${process.execPath}" "${tsupCli}" --no-dts`, {
     cwd,
     stdio: "inherit",
     env: {
