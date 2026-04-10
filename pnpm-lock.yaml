@@ -20,6 +20,9 @@ importers:
       '@crg/connector-react':
         specifier: link:../../crg-platform/packages/connector-react
         version: link:../../crg-platform/packages/connector-react
+      '@crg/connector-react-v2':
+        specifier: link:../../crg-platform/packages/connector-react-v2
+        version: link:../../crg-platform/packages/connector-react-v2
       '@crg/sidecar-ui':
         specifier: link:../../crg-platform/packages/sidecar-ui
         version: link:../../crg-platform/packages/sidecar-ui

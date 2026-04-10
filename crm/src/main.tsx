@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { CRGProvider } from '@crg/connector-react'
 import { mountSidecarUI, mountAssistUI } from '@crg/sidecar-ui'
+import { CRGToolbar } from '@crg/connector-react-v2'
 import './index.css'
 import App from './App.tsx'
 
@@ -25,17 +26,29 @@ const config = {
   },
 };
 
+const toolbarConfig = {
+  appId: 'crm-demo',
+  graphServiceUrl: import.meta.env.VITE_CRG_GRAPH_SERVICE_URL ?? 'http://localhost:8002',
+  userRole: 'admin',
+  userId: 'demo-user-001',
+  position: {
+    pill: 'bottom-right' as const,
+    commandBar: 'center' as const,
+  },
+};
+
 function Root() {
   if (crgEnabled) {
     return (
       <StrictMode>
-        <CRGProvider 
-          config={config} 
+        <CRGProvider
+          config={config}
           mountTrainUI={(container, bus) => mountSidecarUI(container, bus, config)}
           mountAssistUI={(container, bus) => mountAssistUI(container, bus, config)}
         >
           <App />
         </CRGProvider>
+        <CRGToolbar config={toolbarConfig} />
       </StrictMode>
     );
   }
